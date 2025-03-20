@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: url('images/pregnant\ lady.jpg') no-repeat center center/cover;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            max-width: 900px;
+            width: 90%;
+        }
+
+        .text-section {
+            flex: 1;
+            color: white;
+            padding: 20px;
+        }
+
+        .text-section h2 {
+            font-size: 36px; /* Increase the font size */
+            font-weight: bold; /* Make it bold */
+            text-transform: uppercase; /* Uppercase for emphasis */
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5); /* Add shadow for better visibility */
+        }
+
+        .text-section p {
+            font-size: 18px; /* Increase font size */
+            font-weight: 500; /* Make it slightly bolder */
+            opacity: 1; /* Ensure full visibility */
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4); /* Add a slight shadow */
+            margin-top: 5px; /* Add space between title and slogan */
+        }
+
+        .login-form {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .login-form h3 {
+            margin-bottom: 15px;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .login-form .checkbox {
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            margin: 10px 0;
+        }
+
+        .login-form button {
+            width: 100%;
+            padding: 10px;
+            background: blue;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .google-login {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            border: 1px solid #ccc;
+        }
+
+        .google-login img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .signup-text {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .signup-text a {
+            color: blue;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .signup-text a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="text-section">
+            <h2>Linda Mama</h2>
+            <p>Caring for Mothers, Cherishing New Beginnings.</p>
+        </div>
+        <div class="login-form">
+            <h3>Login</h3>
+            <input type="text" placeholder="Email address" id="email">
+            <input type="password" placeholder="Password" id="password">
+            <button onclick="login()">Login</button>
+
+            <div class="google-login">
+                <img src="images/google-icon.png" alt="Google">
+                <span>Login with Google</span>
+            </div>
+
+            <p class="signup-text">Don't have an account? <a href="signup.html">Sign up</a></p>
+        </div>
+    </div>
+
+    <script>
+        function login() {
+            let email = document.getElementById('email').value;
+            let password = document.getElementById('password').value;
+
+            if (email === '' || password === '') {
+                alert('Please fill in all fields.');
+            } else {
+                alert('Login successful!');
+                // Add authentication logic here
+            }
+        }
+    </script>
+
+</body>
+
+</html>
