@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | Linda Mama</title>
+    <link rel="stylesheet" href="static/css/style.css"> <!-- Your external CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Body styling with background image */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background:  url("/static/images/pregnant lady.jpg") no-repeat center center/cover;
+        }
+
+        /* Container for the form and text */
+        .container {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            max-width: 900px;
+            width: 90%;
+        }
+
+        .text-section {
+            flex: 1;
+            color: white;
+            padding: 20px;
+        }
+
+        .text-section h2 {
+            font-size: 52px;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .text-section p {
+            font-size: 20px;
+            font-weight: 600;
+            font-style: italic;
+            color: #FFD700;
+            font-family: "Georgia", serif;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+            margin-top: 8px;
+        }
+
+        .signup-form {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .signup-form h3 {
+            margin-bottom: 15px;
+        }
+
+        .signup-form input,
+        .signup-form select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .signup-form button {
+            width: 100%;
+            padding: 10px;
+            background: blue;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .google-login {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            border: 1px solid #ccc;
+        }
+
+        .google-login img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .login-text {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .login-text a {
+            color: blue;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .login-text a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="text-section">
+            <h2>Linda Mama</h2>
+            <p>Caring for Mothers, Cherishing New Beginnings.</p>
+        </div>
+        <div class="signup-form">
+            <h3>Sign Up</h3>
+            <form method="POST" action="{{ url_for('signup') }}">
+                <input type="text" id="fullName" name="full_name" placeholder="Full Name" required>
+                <input type="email" id="email" name="email" placeholder="Email" required>
+                <input type="password" id="password" name="password" placeholder="Password" required>
+                <input type="password" id="confirmPassword" name="confirm_password" placeholder="Confirm Password" required>
+            
+                <label for="role">Select Role:</label>
+                <select id="role" name="role" required onchange="toggleGuardianField()">
+                    <option value="" disabled selected>Sign up as</option>
+                    <option value="mother">Mother</option>
+                    <option value="doctor">Doctor</option>
+                    <option value="guardian">Father/Guardian</option>
+                </select>
+            
+                <!-- Mother's Email (Hidden by Default) -->
+                <div id="motherEmailField" style="display: none;">
+                    <input type="email" id="mother_email" name="mother_email" placeholder="Mother's Email">
+                </div>
+            
+                <button type="submit">Sign Up</button>
+            </form>
+
+
+            <a href="{{ url_for('google_login') }}" class="google-login">
+                <img src="/static/images/google-icon.png" alt="Google">
+                <span>Sign up with Google</span>
+            </a>
+
+            <p class="login-text">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+        </div>
+    </div>
+
+    <script>
+        function signup() {
+            let fullName = document.getElementById('fullName').value.trim();
+            let email = document.getElementById('email').value.trim();
+            let password = document.getElementById('password').value;
+            let confirmPassword = document.getElementById('confirmPassword').value;
+            let role = document.getElementById('role').value;
+
+            if (fullName === '' || email === '' || password === '' || confirmPassword === '' || role === '') {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match.');
+                return;
+            }
+
+            // For now, simply prompt the user to save passwords (the browser will usually prompt automatically)
+            alert('Sign up successful! Your password will be saved by your browser.');
+
+            // Redirect to login page after signup
+            window.location.href = "/login";
+
+        }
+
+        function googleSignup() {
+            alert("Google signup clicked. Implement Google OAuth integration here.");
+        }
+
+        function toggleGuardianField() {
+                var role = document.getElementById("role").value;
+                var motherEmailField = document.getElementById("motherEmailField");
+
+                if (role === "guardian") {
+                    motherEmailField.style.display = "block";
+                } else {
+                    motherEmailField.style.display = "none";
+                }
+            }
+    </script>
+
+</body>
+
+</html>

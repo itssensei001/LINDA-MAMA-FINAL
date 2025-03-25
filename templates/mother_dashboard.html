@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mother's Dashboard | Linda Mama</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --light-gray: #f8f9fa;
+            --dark-text: #343a40;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            padding: 2rem 1rem;
+            color: white;
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+            transition: left 0.3s ease;
+            z-index: 1000;
+        }
+
+        /* Sidebar nav links */
+        .sidebar .nav-link {
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .sidebar .nav-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .sidebar .nav-link:hover i {
+            transform: scale(1.1);
+        }
+
+        /* Notification styles (if needed) */
+        .notification-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .notification-bell {
+            font-size: 20px;
+            color: white;
+            position: absolute;
+            bottom: 1px;
+            right: 30px;
+        }
+
+        .notification-bell .new-notification {
+            position: absolute;
+            top: -2px;
+            right: -5px;
+            background: red;
+            color: white;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 35px;
+            right: -15px;
+            background: white;
+            color: var(--dark-text);
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 220px;
+            padding: 10px;
+            z-index: 1100;
+        }
+
+        .notification-dropdown ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .notification-dropdown li {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .notification-dropdown li:last-child {
+            border-bottom: none;
+        }
+
+        .notification-dropdown li:hover {
+            background: #f8f9fa;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+            min-height: 100vh;
+            background: var(--light-gray);
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Sidebar Toggle Button - hidden on larger screens */
+        #menu-toggle {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1100;
+        }
+
+        /* Responsive styles for small screens */
+        @media (max-width: 768px) {
+            .sidebar {
+                left: -250px;
+                /* Hide sidebar off-canvas */
+            }
+
+            .sidebar.open {
+                left: 0;
+                /* Show sidebar when open */
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .main-content.shifted {
+                margin-left: 250px;
+            }
+
+            #menu-toggle {
+                display: block;
+            }
+        }
+
+        /* Card Hover Effects */
+        .card {
+            border: none;
+            border-radius: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Health Tips Animation */
+        .fade-in {
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Button styles for notifications */
+        .approve-btn,
+        .deny-btn {
+            margin-left: 5px;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 3px;
+        }
+
+        .approve-btn {
+            background-color: green;
+            color: white;
+        }
+
+        .deny-btn {
+            background-color: red;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="mb-4 text-center d-flex justify-content-between align-items-center">
+            <h2 class="fw-bold">Linda Mama</h2>
+            <!-- Notification Bell (optional) -->
+            <div class="notification-container" onclick="toggleNotifications()">
+                <i class="fas fa-bell notification-bell"></i>
+                <span class="new-notification" id="notification-dot" style="display: none;"></span>
+                <div class="notification-dropdown" id="notification-dropdown">
+                    <ul id="notifications-list">
+                        <!-- Notifications injected here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="nav flex-column">
+            <a href="mother_dashboard.html" class="nav-link active">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="profile.html" class="nav-link">
+                <i class="fas fa-user"></i> Profile &amp; Settings
+            </a>
+            <a href="tracker.html" class="nav-link">
+                <i class="fas fa-heartbeat"></i> Pregnancy Tracker
+            </a>
+            <a href="nutrition.html" class="nav-link">
+                <i class="fas fa-utensils"></i> Meal Plan &amp; Nutrition
+            </a>
+            <a href="comm_and_support.html" class="nav-link">
+                <i class="fas fa-comments"></i> Community &amp; Support
+            </a>
+            <a href="emergency.html" class="nav-link">
+                <i class="fas fa-phone-alt"></i> Emergency Contacts
+            </a>
+            <hr class="text-white">
+            <a href="{{ url_for('login') }}" class="nav-link text-danger">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </div>
+    <!-- Sidebar Toggle Button (visible on small screens) -->
+    <i class="fas fa-bars" id="menu-toggle"></i>
+    <!-- Main Content -->
+    <main class="main-content" id="main-content">
+        <!-- Pregnancy Summary -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="card p-3 text-center shadow-sm">
+                    <h6 class="text-primary">Pregnancy Summary</h6>
+                    <p>Trimester: <span class="text-danger">2nd</span>, Week: 16</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 text-center shadow-sm">
+                    <h6 class="text-primary">Weight</h6>
+                    <p class="text-dark">68 kg</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 text-center shadow-sm">
+                    <h6 class="text-primary">Blood Pressure</h6>
+                    <p class="text-dark">120/80 mmHg</p>
+                </div>
+            </div>
+        </div>
+        <!-- Appointments -->
+        <div class="row">
+            <div class="appointments-container">
+                <div class="card p-3 shadow-sm">
+                    <h6 class="text-primary">Upcoming Appointments with Dr. Achieng</h6>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>March 10, 2025</td>
+                                <td>10:00 AM</td>
+                                <td>Check-up</td>
+                            </tr>
+                            <tr>
+                                <td>March 24, 2025</td>
+                                <td>2:30 PM</td>
+                                <td>Ultrasound</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- Health Tips -->
+        <div class="card p-3 mt-3 shadow-sm">
+            <h6 class="text-primary">Health Tips: Did You Know?</h6>
+            <p id="healthTip" class="fade-in">Loading...</p>
+        </div>
+        <!-- Guardian Approval Requests -->
+        <div class="card p-3 bg-white shadow-sm mt-3">
+            <h6 class="text-primary">Guardian Approval Requests</h6>
+            <ul class="list-group" id="guardian-requests-list">
+                <!-- Populated via fetchGuardianRequests() -->
+            </ul>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+                // Use getElementById so that the IDs exist in your HTML.
+                const menuToggle = document.getElementById("menu-toggle");
+                const sidebar = document.getElementById("sidebar");
+                const mainContent = document.getElementById("main-content");
+
+                // Only add the event listener if the menuToggle element exists
+                if (menuToggle && sidebar && mainContent) {
+                    menuToggle.addEventListener("click", function () {
+                        sidebar.classList.toggle("open");
+                        mainContent.classList.toggle("shifted");
+                    });
+                } else {
+                    console.error("One or more sidebar elements not found. Make sure #menu-toggle, #sidebar, and #main-content exist in your HTML.");
+                }
+
+            // Health Tips Update
+            function updateHealthTip() {
+                const healthTips = [
+                    "Stay hydrated!",
+                    "Eat balanced meals!",
+                    "Get enough sleep!",
+                    "Exercise regularly!"
+                ];
+                document.getElementById("healthTip").innerText =
+                    healthTips[Math.floor(Math.random() * healthTips.length)];
+            }
+            updateHealthTip();
+            setInterval(updateHealthTip, 10000);
+
+            // Toggle notifications dropdown
+            window.toggleNotifications = function () {
+                const dropdown = document.getElementById("notification-dropdown");
+                dropdown.style.display = (dropdown.style.display === "block") ? "none" : "block";
+            };
+
+            // Fetch guardian requests (for notifications)
+            function fetchGuardianRequests() {
+                fetch("/get_guardian_requests")
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const list = document.getElementById("notifications-list");
+                            list.innerHTML = ""; // Clear previous notifications
+                            data.guardian_requests.forEach(request => {
+                                const newItem = document.createElement("li");
+                                newItem.innerHTML = `
+                                ${request.guardian_name} has requested to be your guardian.
+                                <button class="approve-btn" onclick="approveGuardian(${request.id})">Approve</button>
+                                <button class="deny-btn" onclick="denyGuardian(${request.id})">Deny</button>
+                            `;
+                                list.appendChild(newItem);
+                            });
+                            // Show red dot if there are any notifications
+                            document.getElementById("notification-dot").style.display =
+                                data.guardian_requests.length > 0 ? "inline-block" : "none";
+                        } else {
+                            console.error("Error:", data.message);
+                        }
+                    })
+                    .catch(error => console.error("Fetch error:", error));
+            }
+
+            // Approve/deny functions
+            window.approveGuardian = function (requestId) {
+                fetch(`/approve_guardian/${requestId}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(() => fetchGuardianRequests())
+                    .catch(error => console.error("Approve error:", error));
+            };
+
+            window.denyGuardian = function (requestId) {
+                fetch(`/deny_guardian/${requestId}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(() => fetchGuardianRequests())
+                    .catch(error => console.error("Deny error:", error));
+            };
+
+            // Load guardian requests on page load
+            fetchGuardianRequests();
+        });
+    </script>
+
+</body>
+
+</html>
