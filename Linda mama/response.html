@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responding to Question</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="mb-8">
+            <h2 class="text-white text-xl font-bold mb-4 gradient-text">
+                <i class="fas fa-hospital-user mr-2"></i>
+                MediCare Pro
+            </h2>
+        </div>
+        
+        <div class="space-y-2">
+            <a href="index.html" class="nav-link">
+                <i class="fas fa-home"></i>
+                Dashboard
+            </a>
+            <a href="health-monitoring.html" class="nav-link">
+                <i class="fas fa-heartbeat"></i>
+                Health Monitoring
+            </a>
+            <a href="questions.html" class="nav-link">
+                <i class="fas fa-question-circle"></i>
+                Questions
+            </a>
+            <a href="updates.html" class="nav-link">
+                <i class="fas fa-bell"></i>
+                Updates
+            </a>
+        </div>
+
+        <div class="absolute bottom-8 left-0 right-0 px-4">
+            <div class="text-white text-sm bg-white bg-opacity-10 p-4 rounded-lg">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-user-md mr-2"></i>
+                    <p class="opacity-70">Logged in as</p>
+                </div>
+                <p class="font-semibold">Dr. Sarah Johnson</p>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="mb-8 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-gray-800 gradient-text">
+                <i class="fas fa-reply mr-2"></i>
+                Responding to Question
+            </h1>
+            <button class="md:hidden text-gray-600" id="menu-toggle">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+
+        <div class="max-w-4xl mx-auto">
+            <!-- Question Display -->
+            <div class="floating-card p-6 mb-6 border-l-4 border-blue-500">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-start">
+                        <i class="fas fa-question-circle text-blue-500 text-2xl mt-1 mr-3"></i>
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-800" id="question-display"></h2>
+                            <p class="text-gray-500 mt-2 flex items-center">
+                                <i class="fas fa-user-circle mr-2"></i>
+                                Patient ID: 2458 • 
+                                <i class="fas fa-clock ml-2 mr-1"></i>
+                                Asked 2 hours ago
+                            </p>
+                        </div>
+                    </div>
+                    <span class="status-badge bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center">
+                        <i class="fas fa-hourglass-half mr-1"></i>
+                        Pending Response
+                    </span>
+                </div>
+            </div>
+
+            <!-- Response Form -->
+            <div class="floating-card p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-pen-fancy mr-2 text-purple-500"></i>
+                    Your Response
+                </h3>
+                
+                <!-- Text Editor Toolbar -->
+                <div class="bg-gray-50 p-2 rounded-t-lg border border-gray-200 flex flex-wrap gap-2">
+                    <button class="p-2 hover:bg-gray-200 rounded transition-colors group">
+                        <i class="fas fa-bold group-hover:scale-110 transition-transform"></i>
+                    </button>
+                    <button class="p-2 hover:bg-gray-200 rounded transition-colors group">
+                        <i class="fas fa-italic group-hover:scale-110 transition-transform"></i>
+                    </button>
+                    <button class="p-2 hover:bg-gray-200 rounded transition-colors group">
+                        <i class="fas fa-underline group-hover:scale-110 transition-transform"></i>
+                    </button>
+                    <span class="border-r border-gray-300 mx-2"></span>
+                    <button class="p-2 hover:bg-gray-200 rounded transition-colors group">
+                        <i class="fas fa-list-ul group-hover:scale-110 transition-transform"></i>
+                    </button>
+                    <button class="p-2 hover:bg-gray-200 rounded transition-colors group">
+                        <i class="fas fa-list-ol group-hover:scale-110 transition-transform"></i>
+                    </button>
+                </div>
+
+                <!-- Text Area -->
+                <textarea 
+                    class="w-full p-4 border border-gray-200 rounded-b-lg min-h-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                    placeholder="Type your response here..."></textarea>
+
+                <!-- Additional Options -->
+                <div class="mt-6 space-y-4">
+                    <div class="hover-card flex items-center space-x-2 text-gray-600 cursor-pointer hover:text-blue-600 transition p-2 rounded-lg group">
+                        <i class="fas fa-paperclip group-hover:scale-110 transition-transform"></i>
+                        <span>Attach files (optional)</span>
+                    </div>
+                    <div class="hover-card flex items-center space-x-2 text-gray-600 cursor-pointer hover:text-blue-600 transition p-2 rounded-lg group">
+                        <i class="fas fa-link group-hover:scale-110 transition-transform"></i>
+                        <span>Add references (optional)</span>
+                    </div>
+                    <div class="hover-card flex items-center space-x-2 text-gray-600 cursor-pointer hover:text-blue-600 transition p-2 rounded-lg group">
+                        <i class="fas fa-tag group-hover:scale-110 transition-transform"></i>
+                        <span>Add tags (optional)</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="mt-6 flex flex-wrap gap-4">
+                    <button class="hover-card bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition flex items-center group">
+                        <i class="fas fa-paper-plane mr-2 group-hover:translate-x-1 transition-transform"></i>
+                        Submit Response
+                    </button>
+                    <button class="hover-card bg-gray-500 text-white px-8 py-3 rounded-lg hover:bg-gray-600 transition flex items-center group">
+                        <i class="fas fa-save mr-2 group-hover:scale-110 transition-transform"></i>
+                        Save Draft
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) {
+                const sidebar = document.querySelector('.sidebar');
+                const menuToggle = document.getElementById('menu-toggle');
+                if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                    sidebar.classList.remove('active');
+                }
+            }
+        });
+
+        // Get question from URL parameters
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const question = urlParams.get('question');
+            if (question) {
+                document.getElementById('question-display').textContent = question;
+            }
+        });
+    </script>
+</body>
+</html>

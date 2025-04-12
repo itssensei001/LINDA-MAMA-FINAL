@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Risk Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #2D3748;
+            --sidebar-bg: linear-gradient(135deg, #4299E1, #2B6CB0);
+            --nav-link-color: white;
+            --nav-link-hover-bg: rgba(255, 255, 255, 0.15);
+            --card-bg: white;
+            --card-text: #000;
+            --input-bg: white;
+            --input-text: #000;
+            --primary-color: #007bff;
+            --light-gray: #f8f9fa;
+            --dark-text: #343a40;
+        }
+
+        body.dark-theme {
+            --bg-color: #343a40;
+            --text-color: #f8f9fa;
+            --sidebar-bg: linear-gradient(135deg, #2B6CB0, #4299E1);
+            --nav-link-color: #ccc;
+            --nav-link-hover-bg: rgba(255, 255, 255, 0.25);
+            --card-bg: #444;
+            --card-text: #fff;
+            --input-bg: #555;
+            --input-text: #fff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* Sidebar CSS */
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            background: linear-gradient(135deg, var(--hospital-blue), #2B6CB0);
+            padding: 2rem 1rem;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            background: var(--sidebar-bg);
+        }
+
+        .main-content {
+            margin-left: 270px;
+            padding: 2rem;
+            min-height: 100vh;
+            background: var(--light-gray);
+            transition: margin-left 0.3s ease;
+        }
+
+        .nav-link {
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s;
+            color: var(--nav-link-color);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            background: var(--nav-link-hover-bg);
+            color: black;
+        }
+
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            background: var(--nav-link-hover-bg);
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        /* Notification styles (if needed) */
+        .notification-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .notification-bell {
+            font-size: 20px;
+            color: white;
+            position: absolute;
+            bottom: 1px;
+            right: 30px;
+        }
+
+        .notification-bell .new-notification {
+            position: absolute;
+            top: -2px;
+            right: -5px;
+            background: red;
+            color: white;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 35px;
+            right: -15px;
+            background: white;
+            color: var(--dark-text);
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 220px;
+            padding: 10px;
+            z-index: 1100;
+        }
+
+        .notification-dropdown ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .notification-dropdown li {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .notification-dropdown li:last-child {
+            border-bottom: none;
+        }
+
+        .notification-dropdown li:hover {
+            background: #f8f9fa;
+        }
+
+        /* Sidebar Toggle Button - hidden on larger screens */
+        #menu-toggle {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1100;
+        }
+
+        /* Responsive styles for small screens */
+        @media (max-width: 768px) {
+            .sidebar {
+                left: -250px;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .main-content.shifted {
+                margin-left: 250px;
+            }
+
+            #menu-toggle {
+                display: block;
+            }
+        }
+
+        /* Card Hover Effects */
+        .card {
+            border: none;
+            border-radius: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Button styles for notifications */
+        .approve-btn,
+        .deny-btn {
+            margin-left: 5px;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 3px;
+        }
+
+        .approve-btn {
+            background-color: green;
+            color: white;
+        }
+
+        .deny-btn {
+            background-color: red;
+            color: white;
+        }
+    </style>
+
+<body class="bg-gray-50">
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <h2 class="text-white text-xl font-bold mb-4">Linda Mama</h2>
+        <div>
+            <a href="{{ url_for('mother_dashboard') }}" class="nav-link">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="settings.html" class="nav-link">
+                <i class="fas fa-user"></i> Profile &amp; Settings
+            </a>
+            <a href="health_monitoring.html" class="nav-link active">
+                <i class="fas fa-heartbeat"></i> Health Monitoring
+            </a>
+            <a href="mealplan_and_nutrition.html" class="nav-link">
+                <i class="fas fa-utensils"></i> Meal Plan &amp; Nutrition
+            </a>
+            <a href="comm_and_support.html" class="nav-link">
+                <i class="fas fa-comments"></i> Community &amp; Support
+            </a>
+            <hr class="bg-white opacity-25">
+            <a href="{{ url_for('login') }}" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-heartbeat mr-2 text-red-500"></i>
+            Health Risk Analyzer
+        </h1>
+
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Left Column -->
+            <div class="w-full lg:w-1/2 space-y-4">
+                <div class="bg-white shadow-md rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Health Inputs</h2>
+                    <div class="space-y-4">
+                        <input type="number" id="current-week" placeholder="Current Week"
+                            class="w-full px-4 py-2 border border-gray-300 rounded" />
+                        <input type="number" id="weight" placeholder="Weight (kg)"
+                            class="w-full px-4 py-2 border border-gray-300 rounded" />
+                        <input type="number" id="height" placeholder="Height (cm)"
+                            class="w-full px-4 py-2 border border-gray-300 rounded" />
+                        <input type="text" id="bp" placeholder="Blood Pressure (e.g. 120/80)"
+                            class="w-full px-4 py-2 border border-gray-300 rounded" />
+                        <input type="number" id="hr" placeholder="Heart Rate (bpm)"
+                            class="w-full px-4 py-2 border border-gray-300 rounded" />
+                        <input type="number" id="bs" placeholder="Blood Sugar (mg/dL)"
+                            class="w-full px-4 py-2 border border-gray-300 rounded" />
+                        <input type="number" id="age" placeholder="Age (years)"
+                            class="w-full px-4 py-2 border border-gray-300 rounded" />
+                    </div>
+                    <button id="analyze-btn"
+                        class="mt-6 w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition">
+                        Submit & Analyze
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="w-full lg:w-1/2">
+                <div class="bg-white shadow-md rounded-lg p-6" id="result-card">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center">
+                            <i class="fas fa-shield-alt text-green-500 text-2xl mr-3"></i>
+                            <h2 class="text-xl font-semibold text-gray-800">Risk Analysis</h2>
+                        </div>
+                        <span id="risk-level"
+                            class="status-badge bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm hidden">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Low Risk
+                        </span>
+                    </div>
+
+                    <div id="result" class="space-y-4">
+                        <!-- JS will inject results here -->
+                    </div>
+                </div>
+
+                <div class="bg-white shadow-md rounded-lg p-6 mt-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Health Data History</h2>
+                    <canvas id="health-history-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const resultDiv = document.getElementById('result');
+        const riskLevel = document.getElementById('risk-level');
+        const healthHistoryChartCanvas = document.getElementById('health-history-chart');
+
+        let healthHistory = {
+            weight: [],
+            bloodPressure: [],
+            heartRate: [],
+            bloodSugar: [],
+            bodyTemperature: [],
+            age: []
+        };
+
+        const chartConfig = {
+            type: 'line',
+            data: {
+                labels: [], // Will hold the dates
+                datasets: [
+                    {
+                        label: 'Weight (kg)',
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                        data: [],
+                        fill: true
+                    },
+                    {
+                        label: 'Blood Pressure (mmHg)',
+                        borderColor: '#FF9800',
+                        backgroundColor: 'rgba(255, 152, 0, 0.2)',
+                        data: [],
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Values'
+                        }
+                    }
+                }
+            }
+        };
+
+        const healthHistoryChart = new Chart(healthHistoryChartCanvas, chartConfig);
+
+        function calculateDueDateAndTrimester(currentWeek) {
+            const weeksInPregnancy = 40; // Total weeks in pregnancy
+            const currentDate = new Date(); // Get the current date
+            const dueDate = new Date(currentDate); // Create a new date object based on the current date
+
+            // Calculate the due date by adding the remaining weeks
+            dueDate.setDate(currentDate.getDate() + (weeksInPregnancy - currentWeek) * 7); // Add remaining days
+
+            let trimester;
+            if (currentWeek < 14) {
+                trimester = "First Trimester";
+            } else if (currentWeek < 28) {
+                trimester = "Second Trimester";
+            } else {
+                trimester = "Third Trimester";
+            }
+
+            return { dueDate: dueDate.toISOString().split('T')[0], trimester }; // Return in YYYY-MM-DD format
+        }
+
+        function calculateBMI(weight, height) {
+            if (height > 0) {
+                return (weight / ((height / 100) ** 2)).toFixed(2); // Convert height to meters
+            }
+            return null; // Return null if height is not valid
+        }
+
+        analyzeBtn.addEventListener('click', () => {
+            const currentWeek = document.getElementById('current-week').value;
+            const weight = document.getElementById('weight').value;
+            const height = document.getElementById('height').value;
+            const bp = document.getElementById('bp').value;
+            const hr = document.getElementById('hr').value;
+            const bs = document.getElementById('bs').value;
+            const age = document.getElementById('age').value;
+
+            // Calculate BMI
+            const bmi = calculateBMI(weight, height);
+
+            // Calculate due date and trimester
+            const { dueDate, trimester } = calculateDueDateAndTrimester(currentWeek);
+
+            // Prepare data to send
+            const data = {
+                current_week: currentWeek,
+                weight: weight,
+                height: height,
+                bmi: bmi,
+                blood_pressure: bp,
+                heart_rate: hr,
+                blood_sugar: bs,
+                age: age,
+                due_date: dueDate,
+                trimester: trimester
+            };
+
+            fetch('/submit_health_metrics', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('Health metrics saved successfully!');
+                } else {
+                    alert('Error saving metrics: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving health metrics:', error);
+            });
+        });
+
+        // Function to update dashboards
+        function updateDashboards(metrics) {
+            // Assuming you have a way to update the dashboards via an API or WebSocket
+            // For example, you could use a WebSocket to broadcast the new metrics
+            fetch('/update_dashboards', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(metrics)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update dashboards');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Dashboards updated successfully:', data);
+            })
+            .catch(error => {
+                console.error('Error updating dashboards:', error);
+            });
+        }
+    </script>
+    <script>
+        // JavaScript for notification toggle
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notification-dropdown');
+            dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
+        }
+    </script>
+</body>
+
+</html>

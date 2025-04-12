@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pregnancy Updates & Insights</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #2D3748;
+            --sidebar-bg: linear-gradient(135deg, #4299E1, #2B6CB0);
+            --nav-link-color: white;
+            --nav-link-hover-bg: rgba(255, 255, 255, 0.15);
+            --primary-color: #4299E1;
+            --light-blue: #EBF8FF;
+            --accent-green: #48BB78;
+            --accent-purple: #9F7AEA;
+            --accent-pink: #ED64A6;
+            --soft-gray: #F7FAFC;
+            --dark-text: #2D3748;
+        }
+
+        body.dark-theme {
+            --bg-color: #343a40;
+            --text-color: #f8f9fa;
+            --sidebar-bg: linear-gradient(135deg, #2B6CB0, #4299E1);
+            --nav-link-color: #ccc;
+            --nav-link-hover-bg: rgba(255, 255, 255, 0.25);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* Sidebar CSS */
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            background: linear-gradient(135deg, var(--hospital-blue), #2B6CB0);
+            padding: 2rem 1rem;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            background: var(--sidebar-bg);
+        }
+
+        .main-content {
+            margin-left: 270px;
+            padding: 2rem;
+            min-height: 100vh;
+            background: var(--soft-gray);
+            overflow-y: hidden;
+        }
+
+        .nav-link {
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s;
+            color: var(--nav-link-color);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            background: var(--nav-link-hover-bg);
+            color: black;
+        }
+
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            background: var(--nav-link-hover-bg);
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        /* Notification styles */
+        .notification-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .notification-bell {
+            font-size: 20px;
+            color: white;
+            position: relative;
+            display: inline-block;
+        }
+
+        .notification-bell .new-notification {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 25px;
+            left: -100px;
+            background: white;
+            color: var(--dark-text);
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            padding: 15px;
+            z-index: 1500;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-dropdown ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .notification-dropdown li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .notification-dropdown li:last-child {
+            border-bottom: none;
+        }
+
+        .notification-dropdown li:hover {
+            background: #f8f9fa;
+        }
+        
+        /* Style for guardian request notifications */
+        .guardian-request-notification {
+            background-color: #f0f9ff;
+            border-left: 3px solid #3b82f6;
+        }
+
+        /* Floating Cards */
+        .floating-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05),
+                0 10px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .floating-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-purple));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .floating-card:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1),
+                0 20px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .floating-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Increase font size for "Linda Mama" */
+        .sidebar h2 {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="flex items-center mb-4">
+            <h2 class="text-white text-xl font-bold">Linda Mama</h2>
+            <!-- Notification Section -->
+            <div class="notification-container ml-2">
+                <i class="fas fa-bell notification-bell" onclick="toggleNotifications()">
+                    <span class="new-notification" id="notification-indicator" style="display: none;"></span>
+                </i>
+                <div class="notification-dropdown" id="notification-dropdown">
+                    <ul id="notification-list">
+                        <li id="no-notifications">No new notifications</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div>
+            <a href="{{ url_for('mother_dashboard') }}" class="nav-link active">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="settings.html" class="nav-link">
+                <i class="fas fa-user"></i> Profile &amp; Settings
+            </a>
+            <a href="health_monitoring.html" class="nav-link">
+                <i class="fas fa-heartbeat"></i> Health Monitoring
+            </a>
+            <a href="mealplan_and_nutrition.html" class="nav-link">
+                <i class="fas fa-utensils"></i> Meal Plan &amp; Nutrition
+            </a>
+            <a href="comm_and_support.html" class="nav-link">
+                <i class="fas fa-comments"></i> Community &amp; Support
+            </a>
+            <hr class="bg-white opacity-25">
+            <a href="{{ url_for('login') }}" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hidden div to store guardian requests data -->
+        <div id="guardian-requests-data" style="display: none;" data-requests='{{ guardian_requests|tojson|safe if guardian_requests else "[]" }}'></div>
+        
+        <div class="mb-8 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-gray-800 gradient-text">
+                <i class="fas fa-baby mr-2"></i>
+                Pregnancy Updates & Insights
+            </h1>
+            <button class="md:hidden text-gray-600" id="menu-toggle" title="Toggle menu">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+
+        <div>
+            <div class="floating-card p-8">
+                <div class="mb-8">
+                    <p class="text-xl text-gray-800 flex items-center">
+                        <i class="fas fa-calendar-alt text-blue-500 mr-2"></i>
+                        Hello {{ current_user.full_name }}, here's what's new with your pregnancy journey...
+                    </p>
+                    <div class="mt-4 flex items-center">
+                        <p class="text-lg font-medium text-blue-800 gradient-text">week {{ mother_profile.current_week }}/40</p>
+                        <span class="mx-4 text-gray-400">|</span>
+                        <span class="text-lg flex items-center">
+                            Your Baby is now the size of a Mango
+                            <span class="text-2xl ml-2 animate-bounce">🥭</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Left Column -->
+                    <div>
+                        <div class="floating-card bg-gray-50 p-6 mb-6">
+                            <h3 class="font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-chart-line text-blue-500 mr-2"></i>
+                                Latest Measurements
+                            </h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="hover-card bg-white p-4 rounded-lg shadow-sm group">
+                                    <div class="flex items-center mb-2">
+                                        <i
+                                            class="fas fa-weight text-blue-500 mr-2 group-hover:scale-110 transition-transform"></i>
+                                        <p class="text-gray-600 text-sm">Weight</p>
+                                    </div>
+                                    <p class="font-semibold text-lg">{{ mother_profile.weight }} kg</p>
+                                </div>
+                                <div class="hover-card bg-white p-4 rounded-lg shadow-sm group">
+                                    <div class="flex items-center mb-2">
+                                        <i
+                                            class="fas fa-calculator text-purple-500 mr-2 group-hover:scale-110 transition-transform"></i>
+                                        <p class="text-gray-600 text-sm">BMI</p>
+                                    </div>
+                                    <p class="font-semibold text-lg">{{ mother_profile.bmi }}</p>
+                                </div>
+                                <div class="hover-card bg-white p-4 rounded-lg shadow-sm group">
+                                    <div class="flex items-center mb-2">
+                                        <i
+                                            class="fas fa-heartbeat text-green-500 mr-2 group-hover:scale-110 transition-transform"></i>
+                                        <p class="text-gray-600 text-sm">Blood Sugar</p>
+                                    </div>
+                                    <p class="font-semibold text-lg">{{ mother_profile.sugar_levels }}</p>
+                                </div>
+                                <div class="hover-card bg-white p-4 rounded-lg shadow-sm group">
+                                    <div class="flex items-center mb-2">
+                                        <i
+                                            class="fas fa-thermometer-half text-red-500 mr-2 group-hover:scale-110 transition-transform"></i>
+                                        <p class="text-gray-600 text-sm">Blood Pressure</p>
+                                    </div>
+                                    <p class="font-semibold text-lg">{{ mother_profile.blood_pressure }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- More Information Section -->
+                        <div class="floating-card p-6 bg-gray-50 w-full mb-6">
+                            <h3 class="font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-info-circle text-purple-500 mr-2"></i>
+                                Did You Know?
+                            </h3>
+                            <p id="did-you-know-fact" class="text-gray-700 mb-4">
+                            </p>
+                            <ul class="list-disc pl-6 text-gray-700">
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div>
+                        <!-- Appointments -->
+                        <div class="row">
+                            <div class="appointments-container">
+                                <div class="floating-card p-6 bg-gray-50 shadow-md rounded-lg">
+                                    <h3 class="text-2xl font-semibold text-blue-800 mb-4">Upcoming Appointments with Dr.
+                                        Achieng</h3>
+                                    <table class="table-auto w-full text-sm text-left text-gray-600">
+                                        <thead>
+                                            <tr class="bg-blue-100 text-gray-800">
+                                                <th class="px-4 py-3 rounded-tl-lg">Date</th>
+                                                <th class="px-4 py-3">Time</th>
+                                                <th class="px-4 py-3 rounded-tr-lg">Type</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="bg-white hover:bg-blue-50">
+                                                <td class="px-4 py-3">March 10, 2025</td>
+                                                <td class="px-4 py-3">10:00 AM</td>
+                                                <td class="px-4 py-3">Check-up</td>
+                                            </tr>
+                                            <tr class="bg-white hover:bg-blue-50">
+                                                <td class="px-4 py-3">March 24, 2025</td>
+                                                <td class="px-4 py-3">2:30 PM</td>
+                                                <td class="px-4 py-3">Ultrasound</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // JavaScript for rotating facts every few seconds
+        const facts = [
+            "By week 20, your baby can hear sounds from outside the womb.",
+            "Your body is producing more blood to support your growing baby.",
+            "At week 24, your baby is about the size of an ear of corn!",
+            "When your baby develops taste buds, they can taste the food you eat!",
+            "By week 30, your baby can recognize your voice and may respond to it.",
+            "Regular prenatal check-ups are essential for monitoring your health and your baby's development.",
+            "Staying active during pregnancy can help reduce discomfort and improve your mood."
+        ];
+
+        let currentFact = 0;
+
+        function updateFact() {
+            const factElement = document.getElementById('did-you-know-fact');
+            factElement.innerHTML = facts[currentFact];
+            currentFact = (currentFact + 1) % facts.length;
+        }
+
+        // Set an interval to change the fact every 5 seconds
+        setInterval(updateFact, 5000);
+
+        // Initial fact update
+        updateFact();
+
+        // Toggle notifications dropdown
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notification-dropdown');
+            dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
+        }
+
+        // Fetch and display notifications
+        function fetchNotifications() {
+            fetch('/api/notifications')
+                .then(response => response.json())
+                .then(data => {
+                    const notificationList = document.getElementById('notification-list');
+                    const indicator = document.getElementById('notification-indicator');
+                    const noNotificationsElement = document.getElementById('no-notifications');
+                    
+                    // Clear current notifications
+                    notificationList.innerHTML = '';
+                    
+                    // Get guardian requests from the hidden div
+                    const requestsDataElement = document.getElementById('guardian-requests-data');
+                    let guardianRequests = [];
+                    
+                    try {
+                        guardianRequests = JSON.parse(requestsDataElement.getAttribute('data-requests'));
+                    } catch (e) {
+                        console.error('Error parsing guardian requests data:', e);
+                    }
+                    
+                    // Combined notification counter
+                    let totalNotifications = 0;
+                    
+                    // Add guardian requests as notifications
+                    if (guardianRequests && guardianRequests.length > 0) {
+                        totalNotifications += guardianRequests.length;
+                        
+                        guardianRequests.forEach(request => {
+                            const li = document.createElement('li');
+                            li.className = 'guardian-request-notification';
+                            li.innerHTML = `
+                                <div class="flex flex-col">
+                                    <span class="font-semibold">${request.guardian_name} wants to be your guardian</span>
+                                    <span class="text-sm text-gray-600">Requested on ${request.request_date}</span>
+                                    <div class="flex mt-2 space-x-2">
+                                        <a href="/approve_guardian/${request.id}/approve" 
+                                           class="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">
+                                            Approve
+                                        </a>
+                                        <a href="/approve_guardian/${request.id}/deny" 
+                                           class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600">
+                                            Deny
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                            notificationList.appendChild(li);
+                        });
+                    }
+                    
+                    // Add regular notifications
+                    if (data.notifications && data.notifications.length > 0) {
+                        totalNotifications += data.notifications.length;
+                        
+                        data.notifications.forEach(notification => {
+                            const li = document.createElement('li');
+                            li.textContent = notification.content;
+                            
+                            // If it's a guardian request notification, add an action link
+                            if (notification.type === 'guardian_request') {
+                                li.innerHTML += `<br><a href="#" 
+                                                 onclick="markNotificationRead(${notification.id})" 
+                                                 class="text-blue-500 hover:underline">View</a>`;
+                            }
+                            
+                            notificationList.appendChild(li);
+                        });
+                    }
+                    
+                    // Show/hide notification indicator
+                    if (totalNotifications > 0) {
+                        indicator.style.display = 'block';
+                    } else {
+                        // No notifications
+                        notificationList.appendChild(noNotificationsElement);
+                        indicator.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching notifications:', error);
+                });
+        }
+
+        // Mark notification as read
+        function markNotificationRead(notificationId) {
+            fetch(`/api/notifications/read/${notificationId}`, {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Refresh notifications
+                fetchNotifications();
+            })
+            .catch(error => {
+                console.error('Error marking notification as read:', error);
+            });
+        }
+
+        // Load guardian requests
+        function loadGuardianRequests() {
+            // This function is now integrated into fetchNotifications()
+            fetchNotifications();
+        }
+
+        // Initialize when the document is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load notifications (which now includes guardian requests)
+            fetchNotifications();
+            
+            // Set up refresh intervals
+            setInterval(fetchNotifications, 30000); // Refresh notifications every 30 seconds
+        });
+    </script>
+</body>
+
+</html>

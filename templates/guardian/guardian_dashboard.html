@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guardian Dashboard | Linda Mama</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #2D3748;
+            --sidebar-bg: linear-gradient(135deg, #4299E1, #2B6CB0);
+            --nav-link-color: white;
+            --nav-link-hover-bg: rgba(255, 255, 255, 0.15);
+            --card-bg: white;
+            --card-text: #000;
+            --primary-color: #4299E1;
+            --light-gray: #F7FAFC;
+            --accent-green: #48BB78;
+            --accent-purple: #9F7AEA;
+            --accent-pink: #ED64A6;
+        }
+
+        body.dark-theme {
+            --bg-color: #343a40;
+            --text-color: #f8f9fa;
+            --sidebar-bg: linear-gradient(135deg, #2B6CB0, #4299E1);
+            --nav-link-color: #ccc;
+            --nav-link-hover-bg: rgba(255, 255, 255, 0.25);
+            --card-bg: #444;
+            --card-text: #fff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Sidebar CSS */
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            padding: 2rem 1rem;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            background: var(--sidebar-bg);
+        }
+
+        .main-content {
+            margin-left: 270px;
+            padding: 2rem;
+            min-height: 100vh;
+            background: var(--light-gray);
+            overflow-y: hidden;
+        }
+
+        .nav-link {
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s;
+            color: var(--nav-link-color);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            background: var(--nav-link-hover-bg);
+        }
+
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            background: var(--nav-link-hover-bg);
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        /* Floating Cards */
+        .floating-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05),
+                0 10px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .floating-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-purple));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .floating-card:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1),
+                0 20px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .floating-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Health Tips */
+        .tip-card {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .tip-card:hover {
+            transform: translateX(5px);
+            background-color: rgba(66, 153, 225, 0.05);
+        }
+
+        /* Responsive styles for small screens */
+        @media (max-width: 768px) {
+            .sidebar {
+                left: -250px;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .main-content.shifted {
+                margin-left: 250px;
+            }
+
+            #menu-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <h2 class="text-white text-xl font-bold mb-4">Linda Mama</h2>
+        <div>
+            <a href="guardian_dashboard.html" class="nav-link active">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <hr class="bg-white opacity-25">
+            <a href="{{ url_for('login') }}" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-user-shield mr-2 text-blue-500"></i>
+                Guardian Dashboard
+            </h1>
+            <p class="text-gray-600 mt-2">Supporting {{ mother.full_name }}'s pregnancy journey</p>
+        </div>
+
+        <!-- Pregnancy Overview Card -->
+        <div class="floating-card p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-baby text-blue-500 mr-2"></i>
+                Pregnancy Overview
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg text-center">
+                    <p class="text-gray-600 text-sm">Current Week</p>
+                    <p class="text-3xl font-bold text-blue-600">{{ mother_profile.current_week if mother_profile and mother_profile.current_week else "?" }}</p>
+                    <p class="text-sm text-gray-600">
+                        {% if mother_profile and mother_profile.trimester == 1 %}
+                            First Trimester
+                        {% elif mother_profile and mother_profile.trimester == 2 %}
+                            Second Trimester
+                        {% elif mother_profile and mother_profile.trimester == 3 %}
+                            Third Trimester
+                        {% else %}
+                            Trimester Unknown
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg text-center">
+                    <p class="text-gray-600 text-sm">Due Date</p>
+                    <p class="text-2xl font-bold text-purple-600">
+                        {% if mother_profile and mother_profile.due_date %}
+                            {{ mother_profile.due_date.strftime('%B %d, %Y') }}
+                        {% else %}
+                            Not set
+                        {% endif %}
+                    </p>
+                    <p class="text-sm text-gray-600">
+                        {% if mother_profile and mother_profile.due_date %}
+                            {% set days_remaining = mother_profile.due_date %}
+                            {% if days_remaining %}
+                                Coming soon!
+                            {% else %}
+                                Date not set
+                            {% endif %}
+                        {% else %}
+                            Date not set
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg text-center">
+                    <p class="text-gray-600 text-sm">Baby Size</p>
+                    <p class="text-2xl font-bold text-green-600">
+                        {% if mother_profile and mother_profile.current_week %}
+                            {% if mother_profile.current_week <= 8 %}
+                                Blueberry
+                            {% elif mother_profile.current_week <= 12 %}
+                                Lime
+                            {% elif mother_profile.current_week <= 16 %}
+                                Avocado
+                            {% elif mother_profile.current_week <= 20 %}
+                                Banana
+                            {% elif mother_profile.current_week <= 24 %}
+                                Mango
+                            {% elif mother_profile.current_week <= 28 %}
+                                Eggplant
+                            {% elif mother_profile.current_week <= 32 %}
+                                Pineapple
+                            {% elif mother_profile.current_week <= 36 %}
+                                Honeydew
+                            {% else %}
+                                Watermelon
+                            {% endif %}
+                        {% else %}
+                            Unknown
+                        {% endif %}
+                    </p>
+                    <p class="text-sm text-gray-600">
+                        {% if mother_profile and mother_profile.current_week %}
+                            {% if mother_profile.current_week <= 8 %}
+                                ~1.5 cm | ~1.5 g
+                            {% elif mother_profile.current_week <= 12 %}
+                                ~5 cm | ~14 g
+                            {% elif mother_profile.current_week <= 16 %}
+                                ~12 cm | ~100 g
+                            {% elif mother_profile.current_week <= 20 %}
+                                ~16 cm | ~300 g
+                            {% elif mother_profile.current_week <= 24 %}
+                                ~21 cm | ~600 g
+                            {% elif mother_profile.current_week <= 28 %}
+                                ~24 cm | ~900 g
+                            {% elif mother_profile.current_week <= 32 %}
+                                ~28 cm | ~1.7 kg
+                            {% elif mother_profile.current_week <= 36 %}
+                                ~34 cm | ~2.6 kg
+                            {% else %}
+                                ~40 cm | ~3+ kg
+                            {% endif %}
+                        {% else %}
+                            Size unknown
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Status Card -->
+        <div class="floating-card p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-heartbeat text-red-500 mr-2"></i>
+                Recent Health Status
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="border border-gray-200 p-3 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-gray-600">Weight</p>
+                        <i class="fas fa-weight text-blue-500"></i>
+                    </div>
+                    <p class="text-xl font-bold mt-2">{{ metrics.weight if metrics and metrics.weight else "N/A" }} kg</p>
+                    <p class="text-xs text-green-500">Normal range</p>
+                </div>
+                <div class="border border-gray-200 p-3 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-gray-600">Blood Pressure</p>
+                        <i class="fas fa-stethoscope text-red-500"></i>
+                    </div>
+                    <p class="text-xl font-bold mt-2">{{ metrics.blood_pressure if metrics and metrics.blood_pressure else "N/A" }}</p>
+                    <p class="text-xs text-green-500">Normal</p>
+                </div>
+                <div class="border border-gray-200 p-3 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-gray-600">Last Checkup</p>
+                        <i class="fas fa-calendar-check text-purple-500"></i>
+                    </div>
+                    <p class="text-xl font-bold mt-2">
+                        {% if metrics and metrics.date_recorded %}
+                            {{ metrics.date_recorded.strftime('%B %d') }}
+                        {% else %}
+                            Not recorded
+                        {% endif %}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        {% if metrics and metrics.date_recorded %}
+                            Recently recorded
+                        {% else %}
+                            No data
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="border border-gray-200 p-3 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-gray-600">Overall Status</p>
+                        <i class="fas fa-check-circle text-green-500"></i>
+                    </div>
+                    <p class="text-xl font-bold mt-2 text-green-600">Healthy</p>
+                    <p class="text-xs text-gray-500">No concerns</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Appointment Card -->
+        <div class="floating-card p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-calendar-alt text-blue-500 mr-2"></i>
+                Next Appointment
+            </h2>
+            {% if appointments and appointments|length > 0 %}
+                {% set next_appointment = appointments[0] %}
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-lg font-medium">{{ next_appointment.appointment_type }}</p>
+                            <p class="text-gray-600">
+                                {% if next_appointment.doctor %}
+                                    With Dr. {{ next_appointment.doctor.user.full_name }}
+                                {% else %}
+                                    Doctor not assigned
+                                {% endif %}
+                            </p>
+                            <p class="text-gray-600 mt-2">
+                                <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
+                                {% if next_appointment.doctor and next_appointment.doctor.hospital %}
+                                    {{ next_appointment.doctor.hospital }}
+                                {% else %}
+                                    Hospital not specified
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-medium text-blue-600">{{ next_appointment.date.strftime('%B %d, %Y') }}</p>
+                            <p class="text-gray-600">{{ next_appointment.time.strftime('%I:%M %p') }}</p>
+                            <button class="mt-2 bg-blue-600 text-white py-1 px-3 rounded-lg text-sm hover:bg-blue-700">
+                                <i class="fas fa-calendar-plus mr-1"></i> Add to Calendar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="bg-gray-50 p-4 rounded-lg text-center">
+                    <p class="text-gray-600">No upcoming appointments scheduled</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Health Tips Card -->
+        <div class="floating-card p-6">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                Helpful Tips for Supporting Her
+            </h2>
+            <div class="space-y-4">
+                <div class="tip-card">
+                    <h3 class="font-medium text-blue-600"><i class="fas fa-utensils mr-2"></i>Nutrition Support</h3>
+                    <p class="text-gray-600">Encourage balanced meals with plenty of protein, iron, and folic acid. Prepare small, frequent meals if she experiences nausea.</p>
+                </div>
+                <div class="tip-card">
+                    <h3 class="font-medium text-purple-600"><i class="fas fa-bed mr-2"></i>Rest & Comfort</h3>
+                    <p class="text-gray-600">Help create a comfortable sleeping environment. A pregnancy pillow can help alleviate back pain in the second trimester.</p>
+                </div>
+                <div class="tip-card">
+                    <h3 class="font-medium text-green-600"><i class="fas fa-walking mr-2"></i>Exercise Companion</h3>
+                    <p class="text-gray-600">Join her for gentle walks - 30 minutes daily can improve circulation and mood. Swimming is also an excellent low-impact exercise.</p>
+                </div>
+                <div class="tip-card">
+                    <h3 class="font-medium text-red-600"><i class="fas fa-heart mr-2"></i>Emotional Support</h3>
+                    <p class="text-gray-600">Pregnancy hormones can cause mood swings. Be patient, listen actively, and acknowledge her feelings without judgment.</p>
+                </div>
+                <div class="tip-card">
+                    <h3 class="font-medium text-orange-600"><i class="fas fa-notes-medical mr-2"></i>Doctor's Appointments</h3>
+                    <p class="text-gray-600">Attend appointments when possible and help keep track of questions to ask the healthcare provider.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menu-toggle');
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    document.querySelector('.sidebar').classList.toggle('open');
+                    document.querySelector('.main-content').classList.toggle('shifted');
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

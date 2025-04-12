@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Plan & Nutrition | Linda Mama</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #2D3748;
+            --hospital-blue: #4299E1;
+            --sidebar-bg: linear-gradient(135deg, #4299E1, #2B6CB0);
+            --nav-link-color: white;
+            --nav-link-hover-bg: rgba(255, 255, 255, 0.15);
+            --card-bg: white;
+            --card-text: #000;
+            --input-bg: white;
+            --input-text: #000;
+            --soft-gray: #f8f9fa;
+        }
+
+        body.dark-theme {
+            --bg-color: #343a40;
+            --text-color: #f8f9fa;
+            --sidebar-bg: linear-gradient(135deg, #2B6CB0, #4299E1);
+            --nav-link-color: #ccc;
+            --nav-link-hover-bg: rgba(255, 255, 255, 0.25);
+            --card-bg: #444;
+            --card-text: #fff;
+            --input-bg: #555;
+            --input-text: #fff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+        }
+
+        /* Sidebar CSS */
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            background: linear-gradient(135deg, var(--hospital-blue), #2B6CB0);
+            padding: 2rem 1rem;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            background: var(--sidebar-bg);
+        }
+
+        .main-content {
+            margin-left: 270px;
+            padding: 2rem;
+            min-height: 100vh;
+            background: var(--soft-gray);
+            overflow-y: hidden;
+        }
+
+        .nav-link {
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s;
+            color: var(--nav-link-color);
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            background: var(--nav-link-hover-bg);
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            color: var(--card-text);
+            border-radius: 12px;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-control {
+            background: var(--input-bg);
+            color: var(--input-text);
+        }
+        
+        /* Navigation tabs styling */
+        .nav-tabs .nav-link {
+            color: #495057;
+            font-weight: 500;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            margin-right: 3px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            background-color: #e9ecef;
+            color: #2B6CB0;
+            border-color: #ced4da;
+            transform: translateY(-2px);
+        }
+        
+        .nav-tabs .nav-link.active {
+            background-color: #fff;
+            color: #2B6CB0;
+            border-bottom-color: #fff;
+            font-weight: 600;
+        }
+        
+        body.dark-theme .nav-tabs .nav-link {
+            background-color: #343a40;
+            color: #f8f9fa;
+            border-color: #555;
+        }
+        
+        body.dark-theme .nav-tabs .nav-link:hover {
+            background-color: #495057;
+            color: #4299E1;
+            border-color: #6c757d;
+        }
+        
+        body.dark-theme .nav-tabs .nav-link.active {
+            background-color: #444;
+            color: #4299E1;
+            border-bottom-color: #444;
+        }
+
+        /* Custom tooltip styling for better readability */
+        .tooltip .tooltip-inner {
+            background-color: rgba(43, 108, 176, 0.95);
+            color: white;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            max-width: 300px;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .tooltip .tooltip-arrow::before {
+            border-top-color: rgba(43, 108, 176, 0.95);
+        }
+
+        body.dark-theme .tooltip .tooltip-inner {
+            background-color: rgba(255, 255, 255, 0.95);
+            color: #333;
+        }
+
+        body.dark-theme .tooltip .tooltip-arrow::before {
+            border-top-color: rgba(255, 255, 255, 0.95);
+        }
+
+        /* Mental Health specific styles */
+        #breathingCircle {
+            width: 150px; 
+            height: 150px; 
+            color: white; 
+            font-size: 20px; 
+            margin: auto;
+            transition: transform 3s ease;
+        }
+
+        #affirmationBox {
+            font-style: italic;
+        }
+
+        /* Exercise specific styles */
+        .carousel-caption {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <h2 class="text-white text-xl font-bold mb-4">Linda Mama</h2>
+        <div>
+            <a href="{{ url_for('mother_dashboard') }}" class="nav-link">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="settings.html" class="nav-link">
+                <i class="fas fa-user"></i> Profile &amp; Settings
+            </a>
+            <a href="health_monitoring.html" class="nav-link">
+                <i class="fas fa-heartbeat"></i> Health Monitoring
+            </a>
+            <a href="mealplan_and_nutrition.html" class="nav-link active">
+                <i class="fas fa-utensils"></i> Meal Plan &amp; Nutrition
+            </a>
+            <a href="comm_and_support.html" class="nav-link">
+                <i class="fas fa-comments"></i> Community &amp; Support
+            </a>
+            <hr class="bg-white opacity-25">
+            <a href="{{ url_for('login') }}" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Meal Plan, Nutrition & Well-being</h2>
+            
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-tabs" id="nutritionTabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#mealplan">
+                        <i class="fas fa-utensils me-2"></i>Meal Plan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#exercise">
+                        <i class="fas fa-running me-2"></i>Exercise Routine
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#mentalhealth">
+                        <i class="fas fa-brain me-2"></i>Mental Health
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content mt-4">
+                <!-- Meal Plan Tab -->
+                <div class="tab-pane fade show active" id="mealplan">
+                    <div class="container">
+                        <h3 class="mb-4 text-center">Personalized Meal Plan</h3>
+                        
+                        <form action="/submit-dietary-preferences" method="POST" class="p-4 bg-white shadow rounded">
+                            <!-- Dietary Preferences -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Dietary Preferences</label>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input diet-option" type="radio" id="meat-eater" name="diet" value="Meat-eater" checked>
+                                            <label class="form-check-label" for="meat-eater">Meat-eater</label>
+                                            <i class="fas fa-info-circle text-primary ms-1" data-bs-toggle="tooltip" title="Standard diet that includes all animal products including red meat, poultry, fish, and dairy."></i>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input diet-option" type="radio" id="vegetarian" name="diet" value="Vegetarian">
+                                            <label class="form-check-label" for="vegetarian">Vegetarian</label>
+                                            <i class="fas fa-info-circle text-primary ms-1" data-bs-toggle="tooltip" title="Excludes meat, poultry and fish but includes plant foods along with dairy products and eggs."></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input diet-option" type="radio" id="vegan" name="diet" value="Vegan">
+                                            <label class="form-check-label" for="vegan">Vegan</label>
+                                            <i class="fas fa-info-circle text-primary ms-1" data-bs-toggle="tooltip" title="Plant-based diet that excludes all animal products including meat, fish, dairy, eggs, and honey."></i>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input diet-option" type="radio" id="pescatarian" name="diet" value="Pescatarian">
+                                            <label class="form-check-label" for="pescatarian">Pescatarian</label>
+                                            <i class="fas fa-info-circle text-primary ms-1" data-bs-toggle="tooltip" title="Similar to vegetarian but includes fish and seafood while excluding other meats."></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Food Allergies -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Food Allergies</label>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input allergy-option" type="checkbox" id="groundnuts" name="allergies[]" value="Groundnuts">
+                                            <label class="form-check-label" for="groundnuts">Groundnuts/Njugu</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input allergy-option" type="checkbox" id="dairy" name="allergies[]" value="Dairy">
+                                            <label class="form-check-label" for="dairy">Maziwa (Dairy)</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input allergy-option" type="checkbox" id="eggs" name="allergies[]" value="Eggs">
+                                            <label class="form-check-label" for="eggs">Mayai (Eggs)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input allergy-option" type="checkbox" id="wheat" name="allergies[]" value="Wheat">
+                                            <label class="form-check-label" for="wheat">Ngano (Wheat)</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input allergy-option" type="checkbox" id="fish" name="allergies[]" value="Fish">
+                                            <label class="form-check-label" for="fish">Samaki (Fish)</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input allergy-option" type="checkbox" id="millet" name="allergies[]" value="Millet">
+                                            <label class="form-check-label" for="millet">Wimbi (Millet)</label>
+                                        </div>
+                                        <input type="text" class="form-control mt-2 allergy-option" name="allergy_other" placeholder="Other (Specify)">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cravings & Aversions -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold" for="cravings">Cravings</label>
+                                <input type="text" class="form-control" id="cravings" name="cravings" placeholder="What foods are you craving?">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold" for="aversions">Aversions</label>
+                                <input type="text" class="form-control" id="aversions" name="aversions" placeholder="What foods are you avoiding?">
+                            </div>
+
+                            <!-- Water Intake -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold" for="water_intake">Water Intake (Daily Goal)</label>
+                                <select class="form-select" id="water_intake" name="water_intake" title="Daily water intake goal">
+                                    <option value="1L">1L</option>
+                                    <option value="2L">2L</option>
+                                    <option value="3L+">3L+</option>
+                                </select>
+                            </div>
+
+                            <!-- Nutritional Focus -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Preferred Nutritional Focus</label>
+                                <div class="form-check">
+                                    <input class="form-check-input nutrition-option" type="checkbox" id="high_protein" name="nutrition[]" value="High Protein">
+                                    <label class="form-check-label" for="high_protein">High Protein</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input nutrition-option" type="checkbox" id="iron_rich" name="nutrition[]" value="Iron-Rich Foods">
+                                    <label class="form-check-label" for="iron_rich">Iron-Rich Foods</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input nutrition-option" type="checkbox" id="calcium_rich" name="nutrition[]" value="Calcium-Rich Foods">
+                                    <label class="form-check-label" for="calcium_rich">Calcium-Rich Foods</label>
+                                </div>
+                            </div>
+
+                            <!-- Meal Frequency -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Meal Frequency</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" id="small_meals" name="meal_frequency" value="Small Frequent Meals">
+                                    <label class="form-check-label" for="small_meals">Small Frequent Meals</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" id="three_meals" name="meal_frequency" value="Three Full Meals">
+                                    <label class="form-check-label" for="three_meals">Three Full Meals</label>
+                                </div>
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <button type="submit" class="btn btn-success w-100 mb-3">Save Preferences</button>
+                            <button type="button" class="btn btn-primary w-100" onclick="generateMealPlan()">Generate Meal Plan</button>
+                        </form>
+
+                        <!-- Meal Plan Section -->
+                        <div id="mealPlan" class="mt-4 p-4 bg-white shadow rounded d-none">
+                            <h3 class="text-center">Suggested Meal Plan</h3>
+                            <div class="mb-3">
+                                <h5>🥣 Breakfast</h5>
+                                <p id="breakfast"></p>
+                            </div>
+                            <div class="mb-3">
+                                <h5>🍛 Lunch</h5>
+                                <p id="lunch"></p>
+                            </div>
+                            <div class="mb-3">
+                                <h5>🍽️ Supper</h5>
+                                <p id="supper"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercise Tab -->
+                <div class="tab-pane fade" id="exercise">
+                    <div class="container">
+                        <h3 class="mb-4 text-center">Exercise Routine</h3>
+                        
+                        <div class="row">
+                            <!-- Left Column: Recommended Exercises -->
+                            <div class="col-md-6">
+                                <h4 class="text-center mb-4">🤰 Recommended Exercises</h4>
+                                <div id="exerciseCarousel" class="carousel slide" data-bs-ride="carousel">
+                                    <div class="carousel-inner">
+                                        <div class="carousel-item active">
+                                            <img src="https://via.placeholder.com/800x400?text=Walking/Running" class="d-block w-100 rounded" alt="Walking Exercise">
+                                            <div class="carousel-caption d-md-block text-dark bg-light p-2 rounded">
+                                                <h5>Walking/Running</h5>
+                                                <p>Helps with circulation and keeps you active.</p>
+                                            </div>
+                                        </div>
+                                        <div class="carousel-item">
+                                            <img src="https://via.placeholder.com/800x400?text=Prenatal+Yoga" class="d-block w-100 rounded" alt="Prenatal Yoga">
+                                            <div class="carousel-caption d-md-block text-dark bg-light p-2 rounded">
+                                                <h5>Prenatal Yoga</h5>
+                                                <p>Improves flexibility and reduces stress.</p>
+                                            </div>
+                                        </div>
+                                        <div class="carousel-item">
+                                            <img src="https://via.placeholder.com/800x400?text=Swimming" class="d-block w-100 rounded" alt="Swimming">
+                                            <div class="carousel-caption d-md-block text-dark bg-light p-2 rounded">
+                                                <h5>Swimming</h5>
+                                                <p>Relieves joint pressure and improves stamina.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#exerciseCarousel" data-bs-slide="prev" title="Previous slide">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#exerciseCarousel" data-bs-slide="next" title="Next slide">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Progress Tracker & Safety Guidelines -->
+                            <div class="col-md-6">
+                                <!-- Progress Tracker -->
+                                <h4 class="text-center">📊 Progress Tracker</h4>
+                                <form id="exerciseForm" class="mt-3">
+                                    <div class="mb-3">
+                                        <label for="exerciseType" class="form-label">Exercise Type:</label>
+                                        <input type="text" class="form-control" id="exerciseType" placeholder="E.g., Walking, Yoga">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="duration" class="form-label">Duration (minutes):</label>
+                                        <input type="number" class="form-control" id="duration" placeholder="Enter duration">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">Log Exercise</button>
+                                </form>
+
+                                <div class="mt-4">
+                                    <h5>Your Progress (Goal: 150 min/week)</h5>
+                                    <div class="progress">
+                                        <div id="progressBar" class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                                    </div>
+                                    <p class="mt-2" id="progressText">0 minutes logged.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Safety Guidelines -->
+                        <div class="mt-4">
+                            <h4 class="text-center">⚠️ Safety Guidelines</h4>
+                            <div class="accordion mt-3" id="safetyAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                            Avoid Lying on Your Back
+                                        </button>
+                                    </h2>
+                                    <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#safetyAccordion">
+                                        <div class="accordion-body">
+                                            Lying flat after the first trimester can reduce blood flow to your baby.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                            Stay Hydrated
+                                        </button>
+                                    </h2>
+                                    <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#safetyAccordion">
+                                        <div class="accordion-body">
+                                            Drink plenty of water before, during, and after exercise.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                            Stop if You Feel Dizzy
+                                        </button>
+                                    </h2>
+                                    <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#safetyAccordion">
+                                        <div class="accordion-body">
+                                            If you experience dizziness, chest pain, or contractions, stop immediately and consult your doctor.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Guided Breathing Exercise -->
+                        <div class="mt-5 text-center">
+                            <h4>🧘 Guided Breathing Exercise</h4>
+                            <p>Follow the instructions to relax and reduce stress.</p>
+
+                            <div id="breathingCircle" class="rounded-circle bg-primary d-flex align-items-center justify-content-center">
+                                Start
+                            </div>
+
+                            <button id="startBreathing" class="btn btn-success mt-3">Start Breathing Exercise</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mental Health Tab -->
+                <div class="tab-pane fade" id="mentalhealth">
+                    <div class="container">
+                        <h3 class="text-center mb-4">🧠 Mental Health & Well-being</h3>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">📅 Daily Check-in</div>
+                                    <div class="card-body">
+                                        <form>
+                                            <div class="mb-3">
+                                                <label class="form-label" for="feeling">How are you feeling today?</label>
+                                                <select class="form-select" id="feeling" title="Select your feeling">
+                                                    <option>Happy 😊</option>
+                                                    <option>Stressed 😰</option>
+                                                    <option>Tired 😴</option>
+                                                    <option>Calm 😌</option>
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-100">Submit</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                
+                                <div class="card mb-4">
+                                    <div class="card-header">📖 Journaling Section</div>
+                                    <div class="card-body">
+                                        <textarea class="form-control" rows="4" placeholder="Write about your pregnancy experiences, emotions, or gratitude..."></textarea>
+                                        <button class="btn btn-primary mt-2 w-100">Save Entry</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="card mb-4">
+                                    <div class="card-header">💤 Sleep Quality Tracker</div>
+                                    <div class="card-body">
+                                        <label class="form-label" for="sleep_quality">How was your sleep last night?</label>
+                                        <select class="form-select mb-2" id="sleep_quality" title="Select sleep quality">
+                                            <option>Great 😴</option>
+                                            <option>Okay 😐</option>
+                                            <option>Poor 😵</option>
+                                        </select>
+                                        <button class="btn btn-primary w-100">Log Sleep</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">🧘 Mindfulness Tips</div>
+                                    <div class="card-body">
+                                        <ul>
+                                            <li>Take deep breaths and stay present.</li>
+                                            <li>Write down three things you're grateful for.</li>
+                                            <li>Take short walks outdoors for fresh air.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div class="card mb-4">
+                                    <div class="card-header">🌈 Mood Tracker</div>
+                                    <div class="card-body">
+                                        <label class="form-label" for="mood">Select your mood:</label>
+                                        <select class="form-select" id="mood" title="Select your mood">
+                                            <option>Happy 😊</option>
+                                            <option>Excited 😃</option>
+                                            <option>Neutral 😐</option>
+                                            <option>Sad 😢</option>
+                                            <option>Anxious 😟</option>
+                                        </select>
+                                        <label class="form-label mt-2" for="mood_notes">Notes (Triggers or Positive Moments)</label>
+                                        <textarea class="form-control" id="mood_notes" rows="2" placeholder="Describe your day..."></textarea>
+                                        <button class="btn btn-primary mt-2 w-100">Save Mood</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="card mb-4">
+                                    <div class="card-header">💌 Positive Affirmations</div>
+                                    <div class="card-body">
+                                        <blockquote class="blockquote text-center bg-light p-3 rounded" id="affirmationBox">
+                                            "You are strong, capable, and loved. Your journey is beautiful."
+                                        </blockquote>
+                                        <button class="btn btn-primary w-100" id="newAffirmation">New Affirmation</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Meal Plan Generation
+        function generateMealPlan() {
+            // Get selected dietary preferences
+            let diet = Array.from(document.querySelectorAll('.diet-option:checked')).map(el => el.value);
+            let allergies = Array.from(document.querySelectorAll('.allergy-option:checked')).map(el => el.value);
+            let nutrition = Array.from(document.querySelectorAll('.nutrition-option:checked')).map(el => el.value);
+
+            // Default meal options
+            let mealOptions = {
+                "Breakfast": ["Oatmeal with banana", "Scrambled eggs with toast", "Smoothie with spinach and yogurt"],
+                "Lunch": ["Grilled chicken salad", "Lentil soup with whole grain bread", "Rice and beans with vegetables"],
+                "Supper": ["Grilled salmon with quinoa", "Vegetable stir-fry with tofu", "Baked sweet potato with avocado"]
+            };
+
+            // Adjust meals based on selections
+            if (diet.includes("Vegetarian")) {
+                mealOptions["Breakfast"] = ["Avocado toast", "Oatmeal with nuts", "Smoothie with almond milk"];
+                mealOptions["Lunch"] = ["Lentil soup", "Grilled vegetable wrap", "Chickpea salad"];
+                mealOptions["Supper"] = ["Stuffed bell peppers", "Pasta with tomato sauce", "Vegetable curry"];
+            }
+
+            if (diet.includes("Vegan")) {
+                mealOptions["Breakfast"] = ["Chia pudding", "Peanut butter toast", "Vegan smoothie"];
+                mealOptions["Lunch"] = ["Quinoa salad", "Vegan burrito", "Lentil soup"];
+                mealOptions["Supper"] = ["Stir-fried tofu with rice", "Vegan chili", "Sweet potato stew"];
+            }
+
+            if (diet.includes("Pescatarian")) {
+                mealOptions["Lunch"].push("Grilled tilapia with rice");
+                mealOptions["Supper"].push("Salmon with steamed veggies");
+            }
+
+            // Remove meals containing allergens
+            if (allergies.includes("Dairy")) {
+                mealOptions["Breakfast"] = mealOptions["Breakfast"].filter(meal => !meal.includes("yogurt") && !meal.includes("cheese"));
+                mealOptions["Lunch"] = mealOptions["Lunch"].filter(meal => !meal.includes("cheese"));
+                mealOptions["Supper"] = mealOptions["Supper"].filter(meal => !meal.includes("cheese"));
+            }
+
+            if (allergies.includes("Gluten")) {
+                mealOptions["Breakfast"] = mealOptions["Breakfast"].filter(meal => !meal.includes("toast") && !meal.includes("bread"));
+                mealOptions["Lunch"] = mealOptions["Lunch"].filter(meal => !meal.includes("bread"));
+            }
+
+            // Display meal plan
+            document.getElementById("breakfast").innerText = mealOptions["Breakfast"][Math.floor(Math.random() * mealOptions["Breakfast"].length)];
+            document.getElementById("lunch").innerText = mealOptions["Lunch"][Math.floor(Math.random() * mealOptions["Lunch"].length)];
+            document.getElementById("supper").innerText = mealOptions["Supper"][Math.floor(Math.random() * mealOptions["Supper"].length)];
+
+            document.getElementById("mealPlan").classList.remove("d-none");
+        }
+
+        // Exercise Progress Tracker
+        let totalExerciseMinutes = 0;
+        const weeklyGoal = 150; // Set weekly exercise goal in minutes
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const exerciseForm = document.getElementById("exerciseForm");
+            const progressBar = document.getElementById("progressBar");
+            const progressText = document.getElementById("progressText");
+
+            if (exerciseForm) {
+                exerciseForm.addEventListener("submit", function (event) {
+                    event.preventDefault();
+                    let minutes = parseInt(document.getElementById("duration").value);
+
+                    if (!isNaN(minutes) && minutes > 0) {
+                        totalExerciseMinutes += minutes;
+                        let progressPercent = Math.min((totalExerciseMinutes / weeklyGoal) * 100, 100);
+
+                        // Update Progress Bar
+                        progressBar.style.width = progressPercent + "%";
+                        progressBar.setAttribute("aria-valuenow", progressPercent);
+                        progressBar.innerText = Math.round(progressPercent) + "%";
+
+                        // Update Progress Text
+                        progressText.innerText = `${totalExerciseMinutes} minutes logged.`;
+
+                        // Reset Form
+                        document.getElementById("exerciseType").value = "";
+                        document.getElementById("duration").value = "";
+                    } else {
+                        alert("Please enter a valid number of minutes.");
+                    }
+                });
+            }
+
+            // Breathing Exercise
+            const startBreathingBtn = document.getElementById("startBreathing");
+            if (startBreathingBtn) {
+                startBreathingBtn.addEventListener("click", function () {
+                    const breathingCircle = document.getElementById("breathingCircle");
+                    const cycle = ["Inhale", "Hold", "Exhale"];
+                    let index = 0;
+
+                    function updateBreathing() {
+                        breathingCircle.innerText = cycle[index];
+                        breathingCircle.style.transform = index === 0 ? "scale(1.2)" : index === 2 ? "scale(0.8)" : "scale(1)";
+                        index = (index + 1) % cycle.length;
+                    }
+
+                    updateBreathing();
+                    setInterval(updateBreathing, 4000);
+                });
+            }
+
+            // Positive Affirmations
+            const newAffirmationBtn = document.getElementById("newAffirmation");
+            if (newAffirmationBtn) {
+                const affirmations = [
+                    "You are doing great, mama.",
+                    "You are stronger than you think.",
+                    "Your body is amazing, and you are creating life.",
+                    "Trust your instincts; you know what's best.",
+                    "Each day is a new beginning."
+                ];
+
+                newAffirmationBtn.addEventListener('click', function () {
+                    const randomIndex = Math.floor(Math.random() * affirmations.length);
+                    const randomAffirmation = affirmations[randomIndex];
+                    document.getElementById('affirmationBox').textContent = randomAffirmation;
+                });
+            }
+
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        });
+    </script>
+</body>
+
+</html>

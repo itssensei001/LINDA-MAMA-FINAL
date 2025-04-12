@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pregnancy Related Questions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="mb-8">
+            <h2 class="text-white text-xl font-bold mb-4 gradient-text">
+                <i class="fas fa-hospital-user mr-2"></i>
+                MediCare Pro
+            </h2>
+        </div>
+        
+        <div class="space-y-2">
+            <a href="index.html" class="nav-link">
+                <i class="fas fa-home"></i>
+                Dashboard
+            </a>
+            <a href="health-monitoring.html" class="nav-link">
+                <i class="fas fa-heartbeat"></i>
+                Health Monitoring
+            </a>
+            <a href="questions.html" class="nav-link active">
+                <i class="fas fa-question-circle icon-pulse"></i>
+                Questions
+            </a>
+            <a href="updates.html" class="nav-link">
+                <i class="fas fa-bell"></i>
+                Updates
+            </a>
+        </div>
+
+        <div class="absolute bottom-8 left-0 right-0 px-4">
+            <div class="text-white text-sm bg-white bg-opacity-10 p-4 rounded-lg">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-user-md mr-2"></i>
+                    <p class="opacity-70">Logged in as</p>
+                </div>
+                <p class="font-semibold">Dr. Sarah Johnson</p>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="mb-8 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-gray-800 gradient-text">
+                <i class="fas fa-comments mr-2"></i>
+                Pregnancy Related Questions
+            </h1>
+            <button class="md:hidden text-gray-600" id="menu-toggle">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+
+        <div class="max-w-4xl mx-auto space-y-6">
+            <!-- Filter Section -->
+            <div class="floating-card p-4 flex flex-wrap gap-4 items-center">
+                <span class="text-gray-700 font-medium flex items-center">
+                    <i class="fas fa-filter mr-2 text-blue-500"></i>
+                    Filter by:
+                </span>
+                <button class="hover-card px-4 py-2 bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200 transition flex items-center">
+                    <i class="fas fa-list-ul mr-2"></i>
+                    All Questions
+                </button>
+                <button class="hover-card px-4 py-2 bg-red-100 text-red-800 rounded-full hover:bg-red-200 transition flex items-center">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    Urgent
+                </button>
+                <button class="hover-card px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full hover:bg-yellow-200 transition flex items-center">
+                    <i class="fas fa-clock mr-2"></i>
+                    New
+                </button>
+                <button class="hover-card px-4 py-2 bg-green-100 text-green-800 rounded-full hover:bg-green-200 transition flex items-center">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Answered
+                </button>
+            </div>
+
+            <!-- Questions List -->
+            <div class="space-y-4">
+                <div class="floating-card p-6 border-l-4 border-red-500 hover-card group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-circle text-red-500 text-xl mt-1 mr-3 group-hover:scale-110 transition-transform"></i>
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-800">I'm bleeding profusely in the mornings what might be wrong?</h3>
+                                <p class="text-gray-500 text-sm mt-1">Asked 2 hours ago by Patient ID: 2458</p>
+                            </div>
+                        </div>
+                        <span class="status-badge bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm flex items-center">
+                            <i class="fas fa-exclamation mr-1"></i>
+                            Urgent
+                        </span>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition flex items-center group">
+                            <i class="fas fa-reply mr-2 group-hover:translate-x-1 transition-transform"></i>
+                            Respond
+                        </button>
+                        <button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition flex items-center group">
+                            <i class="fas fa-share mr-2 group-hover:translate-x-1 transition-transform"></i>
+                            Redirect
+                        </button>
+                    </div>
+                </div>
+
+                <div class="floating-card p-6 border-l-4 border-yellow-500 hover-card group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-question-circle text-yellow-500 text-xl mt-1 mr-3 group-hover:scale-110 transition-transform"></i>
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-800">I've been vomiting way too much lately, I think it's stomach up...</h3>
+                                <p class="text-gray-500 text-sm mt-1">Asked 5 hours ago by Patient ID: 2461</p>
+                            </div>
+                        </div>
+                        <span class="status-badge bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm flex items-center">
+                            <i class="fas fa-clock mr-1"></i>
+                            New
+                        </span>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition flex items-center group">
+                            <i class="fas fa-reply mr-2 group-hover:translate-x-1 transition-transform"></i>
+                            Respond
+                        </button>
+                        <button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition flex items-center group">
+                            <i class="fas fa-share mr-2 group-hover:translate-x-1 transition-transform"></i>
+                            Redirect
+                        </button>
+                    </div>
+                </div>
+
+                <div class="floating-card p-6 border-l-4 border-green-500 hover-card group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 text-xl mt-1 mr-3 group-hover:scale-110 transition-transform"></i>
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-800">Is it normal to feel dizzy during the third trimester?</h3>
+                                <p class="text-gray-500 text-sm mt-1">Asked 1 day ago by Patient ID: 2455</p>
+                            </div>
+                        </div>
+                        <span class="status-badge bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center">
+                            <i class="fas fa-check mr-1"></i>
+                            Answered
+                        </span>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition flex items-center group">
+                            <i class="fas fa-reply mr-2 group-hover:translate-x-1 transition-transform"></i>
+                            Respond
+                        </button>
+                        <button class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition flex items-center group">
+                            <i class="fas fa-share mr-2 group-hover:translate-x-1 transition-transform"></i>
+                            Redirect
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) {
+                const sidebar = document.querySelector('.sidebar');
+                const menuToggle = document.getElementById('menu-toggle');
+                if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                    sidebar.classList.remove('active');
+                }
+            }
+        });
+
+        // Add click handlers for buttons
+        document.querySelectorAll('button').forEach(button => {
+            if (button.textContent.includes('Respond')) {
+                button.addEventListener('click', function() {
+                    const question = this.closest('.floating-card').querySelector('h3').textContent;
+                    window.location.href = `response.html?question=${encodeURIComponent(question)}`;
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>General Chat | Linda Mama</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #2D3748;
+            --hospital-blue: #4299E1;
+            --sidebar-bg: linear-gradient(135deg, #4299E1, #2B6CB0);
+            --nav-link-color: white;
+            --nav-link-hover-bg: rgba(255, 255, 255, 0.15);
+            --card-bg: white;
+            --card-text: #000;
+            --input-bg: white;
+            --input-text: #000;
+            --soft-gray: #f8f9fa;
+        }
+
+        body.dark-theme {
+            --bg-color: #343a40;
+            --text-color: #f8f9fa;
+            --sidebar-bg: linear-gradient(135deg, #2B6CB0, #4299E1);
+            --nav-link-color: #ccc;
+            --nav-link-hover-bg: rgba(255, 255, 255, 0.25);
+            --card-bg: #444;
+            --card-text: #fff;
+            --input-bg: #555;
+            --input-text: #fff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar CSS */
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            background: linear-gradient(135deg, var(--hospital-blue), #2B6CB0);
+            padding: 2rem 1rem;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            background: var(--sidebar-bg);
+        }
+
+        .main-content {
+            margin-left: 270px;
+            padding: 2rem;
+            min-height: 100vh;
+            background: var(--soft-gray);
+            overflow-y: hidden;
+        }
+
+        .nav-link {
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s;
+            color: var(--nav-link-color);
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            background: var(--nav-link-hover-bg);
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            color: var(--card-text);
+            border-radius: 12px;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-control {
+            background: var(--input-bg);
+            color: var(--input-text);
+        }
+
+        /* Chat specific styles */
+        .chat-container {
+            height: 380px;
+            overflow-y: auto;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .message-bubble {
+            padding: 10px 15px;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            max-width: 75%;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .sent-message {
+            background-color: #4299E1;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+
+        .received-message {
+            background-color: #E2E8F0;
+            color: #2D3748;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-info {
+            font-size: 0.75rem;
+            margin-top: 5px;
+            opacity: 0.7;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 15px;
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 25px;
+            border: 1px solid #E2E8F0;
+            outline: none;
+        }
+
+        .emoji-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .emoji-btn:hover {
+            background-color: #E2E8F0;
+        }
+
+        .send-btn {
+            background-color: #4299E1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .send-btn:hover {
+            background-color: #3182CE;
+        }
+
+        .topic-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: #E2E8F0;
+            color: #4A5568;
+            border-radius: 15px;
+            margin-right: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .topic-pill:hover, .topic-pill.active {
+            background-color: #4299E1;
+            color: white;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .username {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        #emojiPanel {
+            position: absolute;
+            bottom: 70px;
+            left: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+        }
+
+        .emoji-picker-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .emoji-picker-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .online-indicator {
+            width: 10px;
+            height: 10px;
+            background-color: #48BB78;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .active-users {
+            color: #4A5568;
+            font-size: 0.9rem;
+        }
+
+        .list-group {
+            overflow: hidden;
+        }
+        
+        .col-md-3 {
+            max-height: calc(100vh - 120px);
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <h2 class="text-white text-xl font-bold mb-4">Linda Mama</h2>
+        <div>
+            <a href="{{ url_for('mother_dashboard') }}" class="nav-link">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="settings.html" class="nav-link">
+                <i class="fas fa-user"></i> Profile &amp; Settings
+            </a>
+            <a href="health_monitoring.html" class="nav-link">
+                <i class="fas fa-heartbeat"></i> Health Monitoring
+            </a>
+            <a href="mealplan_and_nutrition.html" class="nav-link">
+                <i class="fas fa-utensils"></i> Meal Plan &amp; Nutrition
+            </a>
+            <a href="comm_and_support.html" class="nav-link active">
+                <i class="fas fa-comments"></i> Community &amp; Support
+            </a>
+            <hr class="bg-white opacity-25">
+            <a href="{{ url_for('login') }}" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">General Chat</h2>
+
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="card p-3">
+                    <h5 class="text-primary mb-3"><i class="fas fa-users me-2"></i> Chat Groups</h5>
+                    <div class="list-group">
+                        <a href="general.html" class="list-group-item list-group-item-action active">
+                            <i class="fas fa-users me-2"></i> General Chat
+                            <span class="badge bg-primary rounded-pill float-end">24</span>
+                        </a>
+                        <a href="pregnancy_experience.html" class="list-group-item list-group-item-action">
+                            <i class="fas fa-baby me-2"></i> Pregnancy Experiences
+                            <span class="badge bg-primary rounded-pill float-end">16</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="card p-3">
+                    <div class="chat-header">
+                        <div>
+                            <h4 class="mb-0">General Discussion</h4>
+                            <span class="active-users"><i class="fas fa-circle text-success me-1" style="font-size: 8px;"></i> 24 mothers online</span>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary me-2" title="Pin to top">
+                                <i class="fas fa-thumbtack"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary me-2" title="Mute notifications">
+                                <i class="fas fa-bell-slash"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" title="More options">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="chat-container">
+                        <div class="message">
+                            <div class="user-info">
+                                <span class="username">mother34</span>
+                            </div>
+                            <div class="message-bubble received-message">
+                                Hello everyone! I'm new here. I'm 16 weeks pregnant with my first baby. Anyone else in their second trimester?
+                                <div class="message-info">Today, 9:15 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="message">
+                            <div class="user-info">
+                                <span class="username">mother21</span>
+                            </div>
+                            <div class="message-bubble received-message">
+                                Welcome! I'm 22 weeks right now. How are you feeling so far? Has your morning sickness subsided?
+                                <div class="message-info">Today, 9:18 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="message">
+                            <div class="user-info">
+                                <span class="username">mother34</span>
+                            </div>
+                            <div class="message-bubble received-message">
+                                Yes thankfully! The first trimester was tough but I'm feeling so much better now. Have you felt any kicks yet?
+                                <div class="message-info">Today, 9:20 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="message">
+                            <div class="user-info">
+                                <span class="username">mother21</span>
+                            </div>
+                            <div class="message-bubble received-message">
+                                Oh yes! Started feeling little flutters around 18 weeks and now they're getting stronger. It's such an amazing feeling! You'll experience it soon 💕
+                                <div class="message-info">Today, 9:22 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="message">
+                            <div class="user-info">
+                                <span class="username">mother42</span>
+                            </div>
+                            <div class="message-bubble received-message">
+                                Hi ladies! I'm 25 weeks with my second baby. The second trimester is the best part! Enjoy the energy boost while it lasts 😊
+                                <div class="message-info">Today, 9:25 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="message">
+                            <div class="user-info">
+                                <span class="username">mother63</span>
+                            </div>
+                            <div class="message-bubble received-message">
+                                So true! I'm 30 weeks now and starting to slow down again. Is anyone else having trouble sleeping? My back is killing me at night.
+                                <div class="message-info">Today, 9:27 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="message">
+                            <div class="user-info">
+                                <span class="username">You</span>
+                            </div>
+                            <div class="message-bubble sent-message">
+                                I'm having the same issue with sleeping! I've found that a pregnancy pillow helps a lot. Has anyone tried the yoga classes for expecting mothers?
+                                <div class="message-info">Today, 9:30 AM</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-container position-relative">
+                        <button class="emoji-btn" id="emojiToggle" title="Insert emoji">
+                            <i class="far fa-smile"></i>
+                        </button>
+                        <div id="emojiPanel" style="display: none;">
+                            <button class="emoji-picker-btn">😀</button>
+                            <button class="emoji-picker-btn">😁</button>
+                            <button class="emoji-picker-btn">😂</button>
+                            <button class="emoji-picker-btn">🤣</button>
+                            <button class="emoji-picker-btn">😍</button>
+                            <button class="emoji-picker-btn">❤️</button>
+                            <button class="emoji-picker-btn">😎</button>
+                            <button class="emoji-picker-btn">👍</button>
+                            <button class="emoji-picker-btn">👏</button>
+                            <button class="emoji-picker-btn">🤰</button>
+                            <button class="emoji-picker-btn">👶</button>
+                            <button class="emoji-picker-btn">🍼</button>
+                            <button class="emoji-picker-btn">🧸</button>
+                            <button class="emoji-picker-btn">💕</button>
+                            <button class="emoji-picker-btn">💪</button>
+                        </div>
+                        <input type="text" class="form-control chat-input" id="messageInput" placeholder="Type a message...">
+                        <button class="btn btn-primary send-btn" id="sendMessage" title="Send message">
+                            <i class="fas fa-paper-plane me-1"></i> Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const emojiToggle = document.getElementById('emojiToggle');
+            const emojiPanel = document.getElementById('emojiPanel');
+            const messageInput = document.getElementById('messageInput');
+            const sendMessage = document.getElementById('sendMessage');
+            const chatContainer = document.querySelector('.chat-container');
+
+            // Toggle emoji panel
+            emojiToggle.addEventListener('click', function() {
+                emojiPanel.style.display = emojiPanel.style.display === 'none' ? 'grid' : 'none';
+            });
+
+            // Add emoji to message input
+            document.querySelectorAll('.emoji-picker-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    messageInput.value += this.textContent;
+                    messageInput.focus();
+                });
+            });
+
+            // Send message
+            sendMessage.addEventListener('click', sendUserMessage);
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendUserMessage();
+                }
+            });
+
+            function sendUserMessage() {
+                const message = messageInput.value.trim();
+                if (message) {
+                    // Create message HTML
+                    const now = new Date();
+                    const time = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    const messageHTML = `
+                        <div class="message">
+                            <div class="user-info">
+                                <span class="username">You</span>
+                            </div>
+                            <div class="message-bubble sent-message">
+                                ${message}
+                                <div class="message-info">Today, ${time}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    chatContainer.insertAdjacentHTML('beforeend', messageHTML);
+                    messageInput.value = '';
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                    
+                    // Close emoji panel
+                    emojiPanel.style.display = 'none';
+                }
+            }
+
+            // Topic pills
+            document.querySelectorAll('.topic-pill').forEach(pill => {
+                pill.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                });
+            });
+
+            // Auto scroll to bottom on load
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+    </script>
+</body>
+
+</html>

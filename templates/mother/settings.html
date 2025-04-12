@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linda Mama - Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #2D3748;
+            --sidebar-bg: linear-gradient(135deg, #4299E1, #2B6CB0);
+            --nav-link-color: white;
+            --nav-link-hover-bg: rgba(255, 255, 255, 0.15);
+            --card-bg: white;
+            --card-text: #000;
+            --input-bg: white;
+            --input-text: #000;
+        }
+
+        body.dark-theme {
+            --bg-color: #343a40;
+            --text-color: #f8f9fa;
+            --sidebar-bg: linear-gradient(135deg, #2B6CB0, #4299E1);
+            --nav-link-color: #ccc;
+            --nav-link-hover-bg: rgba(255, 255, 255, 0.25);
+            --card-bg: #444;
+            --card-text: #fff;
+            --input-bg: #555;
+            --input-text: #fff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* Sidebar CSS */
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            background: linear-gradient(135deg, var(--hospital-blue), #2B6CB0);
+            padding: 2rem 1rem;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            background: var(--sidebar-bg);
+        }
+
+        .main-content {
+            margin-left: 270px;
+            padding: 2rem;
+            min-height: 100vh;
+            background: var(--soft-gray);
+            overflow-y: hidden;
+        }
+
+        .nav-link {
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s;
+            color: var(--nav-link-color);
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            background: var(--nav-link-hover-bg);
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            color: var(--card-text);
+        }
+
+        .form-control {
+            background: var(--input-bg);
+            color: var(--input-text);
+        }
+
+        /* Profile photo css */
+        #profile-image {
+            width: 250px;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+        }
+
+        /* Appearance part css */
+        body.light-theme {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        body.dark-theme {
+            background-color: #343a40;
+            color: #f8f9fa;
+        }
+
+        .setting-section {
+            margin-bottom: 20px;
+        }
+        
+        /* Navigation tabs styling */
+        .nav-tabs .nav-link {
+            color: #495057;
+            font-weight: 500;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            margin-right: 3px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            background-color: #e9ecef;
+            color: #2B6CB0;
+            border-color: #ced4da;
+            transform: translateY(-2px);
+        }
+        
+        .nav-tabs .nav-link.active {
+            background-color: #fff;
+            color: #2B6CB0;
+            border-bottom-color: #fff;
+            font-weight: 600;
+        }
+        
+        body.dark-theme .nav-tabs .nav-link {
+            background-color: #343a40;
+            color: #f8f9fa;
+            border-color: #555;
+        }
+        
+        body.dark-theme .nav-tabs .nav-link:hover {
+            background-color: #495057;
+            color: #4299E1;
+            border-color: #6c757d;
+        }
+        
+        body.dark-theme .nav-tabs .nav-link.active {
+            background-color: #444;
+            color: #4299E1;
+            border-bottom-color: #444;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <h2 class="text-white text-xl font-bold mb-4">Linda Mama</h2>
+        <div>
+            <a href="{{ url_for('mother_dashboard') }}" class="nav-link">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="settings.html" class="nav-link active">
+                <i class="fas fa-user"></i> Profile &amp; Settings
+            </a>
+            <a href="health_monitoring.html" class="nav-link">
+                <i class="fas fa-heartbeat"></i> Health Monitoring
+            </a>
+            <a href="mealplan_and_nutrition.html" class="nav-link">
+                <i class="fas fa-utensils"></i> Meal Plan &amp; Nutrition
+            </a>
+            <a href="comm_and_support.html" class="nav-link">
+                <i class="fas fa-comments"></i> Community &amp; Support
+            </a>
+            <hr class="bg-white opacity-25">
+            <a href="{{ url_for('login') }}" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+        
+        <!-- Notification Section -->
+        <div class="notification-container">
+            <i class="fas fa-bell notification-bell" onclick="toggleNotifications()">
+                <span class="new-notification" id="notification-indicator" style="display: none;"></span>
+            </i>
+            <div class="notification-dropdown" id="notification-dropdown">
+                <ul id="notification-list">
+                    <li id="no-notifications">No new notifications</li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Settings card -->
+    <div class="main-content">
+        <div class="max-w-4xl bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Settings</h2>
+            <ul class="nav nav-tabs" id="settingsTabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#profile">Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#security">Security</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#notifications">Notifications</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#emergencycontacts">Emergency Contacts</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#appearance">Appearance</a>
+                </li>
+            </ul>
+
+            <!-- Profile Settings -->
+            <div class="tab-content mt-4">
+                <div class="tab-pane fade show active" id="profile">
+                    <div class="card-body media align-items-center">
+                        <img id="profile-image" src="https://bootdey.com/img/Content/avatar/avatar1.png" alt=""
+                            class="d-inline-block ui-w-80">
+                        <div class="media-body ml-4">
+                            <label class="btn btn-outline-primary">
+                                Upload new photo
+                                <input type="file" class="account-settings-fileinput" id="profile-input">
+                            </label> &nbsp;
+                            <button type="button" class="btn btn-default md-btn-flat">Reset</button>
+                        </div>
+                    </div>
+                    <hr class="border-light m-0">
+
+
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" placeholder="Enter your full name">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" placeholder="Enter your email">
+                            <!-- <div class="alert alert-warning mt-3">
+                                Your email is not confirmed. Please check your inbox.<br>
+                                <a href="javascript:void(0)">Resend confirmation</a>
+                            </div> -->
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+
+                    <!-- Language settings -->
+                    <div class="max-w-3xl my-5 settings-card">
+                        <p class="text-gray-600 mb-4">Select Your Preferred Language/Chagua lugha:</p>
+
+                        <form id="language-form">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="language" id="english"
+                                    value="English" checked>
+                                <label class="form-check-label" for="english">English</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="language" id="swahili"
+                                    value="Swahili">
+                                <label class="form-check-label" for="swahili">Swahili</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full">Save Language</button>
+                        </form>
+
+                        <p id="success-message" class="text-green-600 font-semibold mt-4 hidden">Language saved
+                            successfully!</p>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="security">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" class="form-control" placeholder="Enter current password">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-control" placeholder="Enter new password">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" placeholder="Confirm new password">
+                        </div>
+                        <button type="submit" class="btn btn-danger">Update Password</button>
+                    </form>
+                </div>
+
+                <div class="tab-pane fade" id="notifications">
+                    <form>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="email-notifications">
+                            <label class="form-check-label" for="email-notifications">Email Notifications</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sms-notifications">
+                            <label class="form-check-label" for="sms-notifications">SMS Notifications</label>
+                        </div>
+                        <button type="submit" class="btn btn-success mt-3">Save Preferences</button>
+                    </form>
+                </div>
+
+                <!-- Emergency Contacts section -->
+                <div class="tab-pane fade " id="emergencycontacts">
+                    <div id="contacts-list">
+                    </div>
+
+                    <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal"
+                        data-bs-target="#addContactModal">
+                        Add New Contact
+                    </button>
+
+                    <div class="modal fade" id="addContactModal" tabindex="-1" aria-labelledby="addContactModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="addContactModalLabel">Add Emergency Contact</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="contactForm">
+                                        <div class="mb-3">
+                                            <label for="name" class="form-label">Name</label>
+                                            <input type="text" class="form-control" id="name" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="relationship" class="form-label">Relationship</label>
+                                            <input type="text" class="form-control" id="relationship" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="phone" class="form-label">Phone Number</label>
+                                            <input type="tel" class="form-control" id="phone" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="email" class="form-label">Email (Optional)</label>
+                                            <input type="email" class="form-control" id="email">
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary" form="contactForm">Save
+                                        Contact</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Appearance section -->
+                <div class="tab-pane fade" id="appearance">
+                    <div class="setting-section">
+                        <h3>Theme Selection</h3>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input my-2" type="checkbox" id="themeToggle">
+                            <label class="form-check-label my-2" for="themeToggle">Dark Theme</label>
+                        </div>
+                    </div>
+
+                    <div class="setting-section">
+                        <h3>Brightness</h3>
+                        <div class="form-group">
+                            <!-- <label for="brightness">Brightness</label> -->
+                            <input type="range" class="form-control-range" id="brightness" min="50" max="150"
+                                value="100" title="Brightness Control">
+                        </div>
+                    </div>
+
+                    <div class="setting-section">
+                        <h3>Text Size</h3>
+                        <div class="form-group">
+                            <!-- <label for="textSize">Text Size</label> -->
+                            <input type="range" class="form-control-range" id="textSize" min="10" max="24" value="16" title="Text Size Control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript to Update Image Preview -->
+    <script>
+        document.getElementById('profile-input').addEventListener('change', function (event) {
+            const file = event.target.files[0]; // Get the selected file
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('profile-image').src = e.target.result; // Update the image
+                };
+                reader.readAsDataURL(file); // Convert file to data URL
+            }
+        });
+
+        function resetImage() {
+            document.getElementById('profile-image').src = "https://bootdey.com/img/Content/avatar/avatar1.png";
+            document.getElementById('profile-input').value = ""; // Clear the file input
+        }
+    </script>
+
+    <!-- Language settings js-->
+    <script>
+        document.getElementById("language-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+            document.getElementById("success-message").classList.remove("hidden");
+            setTimeout(() => {
+                document.getElementById("success-message").classList.add("hidden");
+            }, 2000);
+        });
+    </script>
+
+    <!-- Appearance settings js -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const themeToggle = document.getElementById('themeToggle');
+            const brightnessSlider = document.getElementById('brightness');
+            const textSizeSlider = document.getElementById('textSize');
+
+            // Theme Toggle
+            themeToggle.addEventListener('change', function () {
+                if (this.checked) {
+                    document.body.classList.remove('light-theme');
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.body.classList.remove('dark-theme');
+                    document.body.classList.add('light-theme');
+                }
+            });
+
+            // Brightness
+            brightnessSlider.addEventListener('input', function () {
+                document.body.style.filter = `brightness(${this.value}%)`;
+            });
+
+            // Text Size
+            textSizeSlider.addEventListener('input', function () {
+                document.body.style.fontSize = `${this.value}px`;
+            });
+
+            //Initial theme setup.
+            if (document.body.classList.contains("dark-theme")) {
+                themeToggle.checked = true;
+            } else {
+                themeToggle.checked = false;
+            }
+        });
+    </script>
+
+    <!-- Emergency Contacts JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const contactsList = document.getElementById('contacts-list');
+            const contactForm = document.getElementById('contactForm');
+
+            contactForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const name = document.getElementById('name').value;
+                const relationship = document.getElementById('relationship').value;
+                const phone = document.getElementById('phone').value;
+                const email = document.getElementById('email').value;
+
+                const contactCard = document.createElement('div');
+                contactCard.classList.add('contact-card');
+                contactCard.innerHTML = `
+                    <h5>${name} (${relationship})</h5>
+                    <p>Phone: ${phone}</p>
+                    ${email ? <p>Email: ${email}</p> : ''}
+                    <button class="btn btn-danger btn-sm delete-contact">Delete</button>
+                `;
+
+                contactsList.appendChild(contactCard);
+                $('#addContactModal').modal('hide');
+                contactForm.reset();
+            });
+
+            contactsList.addEventListener('click', function (event) {
+                if (event.target.classList.contains('delete-contact')) {
+                    event.target.parentElement.remove();
+                }
+            });
+            
+            // Fetch and load notifications
+            fetchNotifications();
+            setInterval(fetchNotifications, 30000); // Refresh notifications every 30 seconds
+        });
+        
+        // Toggle notifications dropdown
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notification-dropdown');
+            dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
+        }
+
+        // Fetch and display notifications
+        function fetchNotifications() {
+            fetch('/api/notifications')
+                .then(response => response.json())
+                .then(data => {
+                    const notificationList = document.getElementById('notification-list');
+                    const indicator = document.getElementById('notification-indicator');
+                    const noNotificationsElement = document.getElementById('no-notifications');
+                    
+                    // Clear current notifications
+                    notificationList.innerHTML = '';
+                    
+                    if (data.notifications && data.notifications.length > 0) {
+                        // Show the notification indicator
+                        indicator.style.display = 'block';
+                        
+                        // Add each notification to the dropdown
+                        data.notifications.forEach(notification => {
+                            const li = document.createElement('li');
+                            li.textContent = notification.content;
+                            
+                            // If it's a guardian request notification, add an action link
+                            if (notification.type === 'guardian_request') {
+                                li.innerHTML += `<br><a href="/mother_dashboard" 
+                                               onclick="markNotificationRead(${notification.id})" 
+                                               class="text-blue-500 hover:underline">View Request</a>`;
+                            }
+                            
+                            notificationList.appendChild(li);
+                        });
+                    } else {
+                        // No notifications
+                        notificationList.appendChild(noNotificationsElement);
+                        indicator.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching notifications:', error);
+                });
+        }
+
+        // Mark notification as read
+        function markNotificationRead(notificationId) {
+            fetch(`/api/notifications/read/${notificationId}`, {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Refresh notifications
+                fetchNotifications();
+            })
+            .catch(error => {
+                console.error('Error marking notification as read:', error);
+            });
+        }
+    </script>
+</body>
+
+</html>
