@@ -259,8 +259,30 @@
                         <p class="text-lg font-medium text-blue-800 gradient-text">week {{ mother_profile.current_week }}/40</p>
                         <span class="mx-4 text-gray-400">|</span>
                         <span class="text-lg flex items-center">
-                            Your Baby is now the size of a Mango
-                            <span class="text-2xl ml-2 animate-bounce">🥭</span>
+                            Your Baby is now the size of a 
+                            {% if mother_profile.current_week %}
+                                {% if mother_profile.current_week <= 8 %}
+                                    Grape 🍇
+                                {% elif mother_profile.current_week <= 12 %}
+                                    Lime 🍋
+                                {% elif mother_profile.current_week <= 16 %}
+                                    Avocado 🥑
+                                {% elif mother_profile.current_week <= 20 %}
+                                    Banana 🍌
+                                {% elif mother_profile.current_week <= 24 %}
+                                    Mango 🥭
+                                {% elif mother_profile.current_week <= 28 %}
+                                    Eggplant 🍆
+                                {% elif mother_profile.current_week <= 32 %}
+                                    Pineapple 🍍
+                                {% elif mother_profile.current_week <= 36 %}
+                                    Honeydew 🍈
+                                {% else %}
+                                    Watermelon 🍉
+                                {% endif %}
+                            {% else %}
+                                Unknown
+                            {% endif %}
                         </span>
                     </div>
                 </div>

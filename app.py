@@ -259,66 +259,7 @@ def signup():
         db.session.add(new_user)
         db.session.commit()
         
-        # --- Handle Guardian Request and Notification --- 
-        if role == 'guardian':
-            try:
-                mother_email = request.form.get('mother_email')
-                if not mother_email:
-                    # This case should ideally be caught by frontend validation (required field)
-                    print("ERROR: Mother email missing from form for guardian signup.")
-                    flash("Mother's email is required for guardian signup.")
-                    # Clean up the created user since the process failed
-                    db.session.delete(new_user)
-                    db.session.commit()
-                    return redirect(url_for('signup')) 
-
-                print(f"DEBUG: Standard Signup - Creating guardian request for {new_user.full_name} (ID: {new_user.id}) to mother {mother_email}")
-                
-                mother = User.query.filter_by(email=mother_email, role="mother").first()
-                if not mother:
-                    print(f"DEBUG: Standard Signup - No mother found with email {mother_email}")
-                    flash(f"No mother account found with email {mother_email}. Please verify the email and try again.")
-                    # Clean up the created user
-                    db.session.delete(new_user)
-                    db.session.commit()
-                    return redirect(url_for('signup'))
-                
-                # Create the guardian request
-                guardian_request = GuardianRequest(
-                    guardian_id=new_user.id,
-                    mother_email=mother_email,
-                    status='pending'
-                )
-                db.session.add(guardian_request)
-                db.session.commit() # Commit request first
-                print(f"DEBUG: Standard Signup - Guardian request created ID: {guardian_request.id}")
-
-                # Create notification for the mother
-                notification = Notification(
-                    user_id=mother.id,
-                    content=f"{new_user.full_name} wants to be your guardian",
-                    notification_type="guardian_request",
-                    related_id=guardian_request.id
-                )
-                db.session.add(notification)
-                db.session.commit() # Commit notification
-                print(f"DEBUG: Standard Signup - Notification created for mother {mother.id}")
-
-            except Exception as e:
-                print(f"ERROR creating guardian request/notification during standard signup: {str(e)}")
-                import traceback
-                traceback.print_exc()
-                db.session.rollback() # Rollback any partial changes
-                flash("An error occurred creating the guardian request. Please try signing up again.")
-                # Clean up the created user if the guardian part failed
-                existing_user_check = User.query.get(new_user.id)
-                if existing_user_check:
-                    db.session.delete(existing_user_check)
-                    db.session.commit()
-                return redirect(url_for('signup'))
-        # --- End Handle Guardian Request --- 
-
-        # Try to send email verification to the guardian/mother/doctor
+        # Try to send email, but also provide direct verification link
         verification_url = url_for('verify_email', token=verification_token, _external=True)
         try:
             email_sent = send_verification_email(new_user)
@@ -360,7 +301,7 @@ def send_verification_email(user):
         print(f"Attempting to send email to: {user.email}")
         print(f"Verification URL: {verification_url}")
         
-        mail.send(msg)
+    mail.send(msg)
         print(f"Email sent successfully to {user.email}")
         return True
     except Exception as e:
@@ -542,58 +483,23 @@ def google_callback():
             db.session.add(doctor_profile)
             
         elif role == "guardian":
-            try:
-                mother_email = session.pop("guardian_mother_email", None)
-                
-                # Check if mother_email was retrieved from session
-                if not mother_email:
-                    print("ERROR: Mother's email not found in session during Google signup.")
-                    flash("Guardian signup failed: Mother's email was missing. Please try signing up again.")
-                    # Clean up potentially created user if signup fails here
-                    db.session.delete(new_user) 
-                    db.session.commit()
-                    return redirect(url_for("signup_with_google"))
-
-                print(f"DEBUG: Creating guardian request for new user {new_user.full_name} (ID: {new_user.id}) to mother {mother_email}")
-                
-                mother = User.query.filter_by(email=mother_email, role="mother").first()
-                if not mother:
-                    print(f"DEBUG: No mother found with email {mother_email}")
-                    flash(f"No mother account found with email {mother_email}. Please verify the email and try again.")
-                    # Clean up potentially created user
-                    db.session.delete(new_user)
-                    db.session.commit()
-                    return redirect(url_for("signup_with_google"))
-                
-                # Create the guardian request
-                guardian_request = GuardianRequest(
-                    guardian_id=new_user.id,
-                    mother_email=mother_email,
-                    status='pending' # Explicitly set status
-                )
-                db.session.add(guardian_request)
-                # Commit the guardian request first
-                db.session.commit()  
-                print(f"DEBUG: Guardian request created successfully with ID: {guardian_request.id}")
-                
-                # Create notification for the mother
+            mother_email = session.pop("guardian_mother_email", "")
+            guardian_request = GuardianRequest(
+                guardian_id=new_user.id,
+                mother_email=mother_email
+            )
+            db.session.add(guardian_request)
+            
+            # Create notification for mother
+            mother = User.query.filter_by(email=mother_email, role="mother").first()
+            if mother:
                 notification = Notification(
                     user_id=mother.id,
-                    content=f"{new_user.full_name} wants to be your guardian", # Use new_user.full_name
+                    content=f"{full_name} wants to be your guardian",
                     notification_type="guardian_request",
                     related_id=guardian_request.id
                 )
                 db.session.add(notification)
-                # Commit the notification separately
-                db.session.commit() 
-                print(f"DEBUG: Notification created successfully for mother {mother.id}")
-                
-            except Exception as e:
-                print(f"ERROR creating guardian request or notification: {str(e)}")
-                import traceback
-                traceback.print_exc()
-                db.session.rollback() # Rollback any partial changes
-                flash("An error occurred during guardian signup. Please try again.")
         
         db.session.commit()
         
@@ -613,11 +519,61 @@ def google_callback():
 def doctor_dashboard():
     if current_user.role != 'doctor':
         return redirect(url_for('login'))
+    
+    # Ensure doctor profile exists
+    if not hasattr(current_user, 'doctor_profile') or not current_user.doctor_profile:
+        doctor_profile = DoctorProfile(user_id=current_user.id)
+        db.session.add(doctor_profile)
+        db.session.commit()
+        current_user.doctor_profile = doctor_profile
 
     # Fetch patients assigned to the doctor, joining with User to get full name
-    patients = db.session.query(MotherProfile, User).join(User).filter(MotherProfile.doctor_id == current_user.doctor_profile.id).all()
+    patients = db.session.query(MotherProfile, User).join(
+        User, User.id == MotherProfile.user_id
+    ).filter(MotherProfile.doctor_id == current_user.doctor_profile.id).all()
+    
+    # Create a separate list of patient-user mappings for JavaScript
+    patient_user_map = []
+    for patient, user in patients:
+        patient_user_map.append({
+            'patient_id': patient.id,
+            'user_id': user.id,
+            'name': user.full_name
+        })
+    
+    # Fetch the doctor's upcoming appointments
+    upcoming_appointments = db.session.query(
+        Appointment, User, MotherProfile
+    ).join(
+        MotherProfile, Appointment.mother_id == MotherProfile.user_id
+    ).join(
+        User, User.id == MotherProfile.user_id
+    ).filter(
+        Appointment.doctor_id == current_user.id,
+        Appointment.status == 'scheduled'
+    ).order_by(
+        Appointment.date, Appointment.time
+    ).all()
+    
+    # Format the appointments for the template
+    formatted_appointments = []
+    for appt, user, profile in upcoming_appointments:
+        formatted_appointments.append({
+            'id': appt.id,
+            'date': appt.date,
+            'time': appt.time,
+            'patient_name': user.full_name,
+            'patient_id': profile.id,
+            'appointment_type': appt.appointment_type
+        })
 
-    return render_template('doctor/doctor_dashboard.html', doctor_name=current_user.full_name, patients=patients)
+    return render_template(
+        'doctor/doctor_dashboard.html', 
+        doctor_name=current_user.full_name, 
+        patients=patients,
+        patient_user_map=patient_user_map,
+        appointments=formatted_appointments
+    )
 
 @app.route('/guardian_dashboard')
 @login_required
@@ -629,10 +585,9 @@ def guardian_dashboard():
     approval = GuardianApproval.query.filter_by(guardian_id=current_user.id).first()
     
     if not approval:
-        flash("Your guardian request is still pending approval")
-        return redirect(url_for('login'))
+        return "Your guardian request is still pending approval"
     
-    mother = User.query(approval.mother_id)
+    mother = User.query.get(approval.mother_id)
     mother_profile = MotherProfile.query.filter_by(user_id=mother.id).first()
     
     # Get mother's latest health metrics
@@ -830,6 +785,31 @@ def send_message():
     receiver_id = data.get('receiver_id')
     content = data.get('content')
     message_type = data.get('message_type', 'user')  # Default to 'user'
+    
+    # Special handling for doctor-patient communication
+    if current_user.role == 'doctor':
+        # Check if receiver_id might be a mother's profile ID instead of User.id
+        # First try to see if it's a valid user ID
+        receiver_user = User.query.get(receiver_id)
+        if not receiver_user:
+            # It might be a mother profile ID, try to get the associated user
+            mother_profile = MotherProfile.query.get(receiver_id)
+            if mother_profile:
+                receiver_id = mother_profile.user_id
+    
+    # Special handling for mother-doctor communication
+    elif current_user.role == 'mother':
+        # If receiver_id is a DoctorProfile ID, convert to User.id
+        receiver_user = User.query.get(receiver_id)
+        if not receiver_user:
+            # It might be a doctor profile ID
+            doctor_profile = DoctorProfile.query.get(receiver_id)
+            if doctor_profile:
+                receiver_id = doctor_profile.user_id
+    
+    # Final validation of receiver ID
+    if not receiver_id or not User.query.get(receiver_id):
+        return {"success": False, "error": "Invalid receiver ID"}, 400
 
     new_message = Message(
         sender_id=current_user.id,
@@ -991,41 +971,171 @@ def setup():
 @app.route('/api/patient_info/<int:patient_id>')
 @login_required
 def get_patient_info(patient_id):
+    if current_user.role != 'doctor':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
     # Fetch the patient's profile
     patient = MotherProfile.query.get_or_404(patient_id)
     
-    # Fetch chat history (assuming you have a way to get chat messages)
+    # Get associated user information
+    user = User.query.get(patient.user_id)
+    if not user:
+        return jsonify({"error": "User not found for this patient"}), 404
+    
+    # Fetch chat history between doctor and mother
     chat_history = Message.query.filter(
-        (Message.sender_id == patient.user_id) | (Message.receiver_id == patient.user_id)
+        db.or_(
+            db.and_(Message.sender_id == current_user.id, Message.receiver_id == user.id),
+            db.and_(Message.sender_id == user.id, Message.receiver_id == current_user.id)
+        )
     ).order_by(Message.timestamp).all()
 
     # Prepare chat messages
-    chat_messages = [{"sender": msg.sender_id, "content": msg.content} for msg in chat_history]
+    chat_messages = []
+    for msg in chat_history:
+        chat_messages.append({
+            "id": msg.id,
+            "content": msg.content,
+            "sender_id": msg.sender_id,
+            "is_from_doctor": msg.sender_id == current_user.id,
+            "timestamp": msg.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        })
+
+    # Get latest health metrics
+    latest_metrics = HealthMetric.query.filter_by(mother_id=user.id)\
+        .order_by(HealthMetric.date_recorded.desc()).first()
+    
+    # Get upcoming appointments
+    upcoming_appointments = Appointment.query.filter_by(
+        mother_id=user.id,
+        status='scheduled'
+    ).order_by(Appointment.date).limit(3).all()
+    
+    # Format appointments
+    formatted_appointments = []
+    for appt in upcoming_appointments:
+        doctor_name = "Not assigned"
+        if appt.doctor_id:
+            doctor = User.query.get(appt.doctor_id)
+            if doctor:
+                doctor_name = doctor.full_name
+                
+        formatted_appointments.append({
+            "id": appt.id,
+            "date": appt.date.strftime('%Y-%m-%d'),
+            "time": appt.time.strftime('%H:%M'),
+            "type": appt.appointment_type,
+            "doctor_name": doctor_name,
+            "status": appt.status
+        })
 
     return jsonify({
+        "user_id": user.id,
+        "full_name": user.full_name,
+        "email": user.email,
+        "current_week": patient.current_week,
         "trimester": patient.trimester,
-        "due_date": patient.due_date.strftime('%Y-%m-%d') if patient.due_date else "N/A",
+        "due_date": patient.due_date.strftime('%Y-%m-%d') if patient.due_date else None,
         "weight": patient.weight,
         "blood_pressure": patient.blood_pressure,
-        "sugar_levels": patient.sugar_levels,
-        "age": patient.age,
-        "chat": chat_messages
+        "chat_history": chat_messages,
+        "metrics": {
+            "weight": latest_metrics.weight if latest_metrics else patient.weight,
+            "blood_pressure": latest_metrics.blood_pressure if latest_metrics else patient.blood_pressure,
+            "blood_sugar": latest_metrics.blood_sugar if latest_metrics else patient.sugar_levels,
+            "last_updated": latest_metrics.date_recorded.strftime('%Y-%m-%d') if latest_metrics else "Not recorded"
+        } if latest_metrics or patient else {},
+        "appointments": formatted_appointments
     })
 
 @app.route('/api/schedule_appointment', methods=['POST'])
 @login_required
 def schedule_appointment():
+    # Get data from request
     data = request.json
+    print(f"Received appointment data: {data}")
+    print(f"Current user: {current_user.id} ({current_user.role})")
+    
+    # Validate required data
+    if not data.get('patientId'):
+        return jsonify({'success': False, 'error': 'Patient ID is required'})
+    
+    if not data.get('date') or not data.get('time'):
+        return jsonify({'success': False, 'error': 'Date and time are required'})
+    
+    try:
+        # Get mother profile from patient ID
+        mother_profile = MotherProfile.query.get(data['patientId'])
+        
+        if not mother_profile:
+            print(f"Patient ID {data['patientId']} not found")
+            return jsonify({'success': False, 'error': 'Patient not found'})
+        
+        # The mother_id should be the user_id of the mother
+        mother_id = mother_profile.user_id
+        print(f"Using mother_id (user_id): {mother_id}")
+        
+        # IMPORTANT: doctor_id in Appointment refers to doctor_profiles.user_id, NOT doctor_profiles.id
+        # So we need to use current_user.id directly, not the doctor profile ID
+        doctor_id = current_user.id
+        print(f"Using doctor_id (user_id): {doctor_id}")
+        
+        # Parse date and time
+        try:
+            appointment_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
+            appointment_time = datetime.strptime(data['time'], '%H:%M').time()
+        except ValueError as e:
+            print(f"Date/time parsing error: {e}")
+            return jsonify({'success': False, 'error': 'Invalid date or time format'})
+        
+        print(f"Creating appointment: mother_id={mother_id}, doctor_id={doctor_id}, date={appointment_date}, time={appointment_time}")
+        
+        # Create appointment
     appointment = Appointment(
-        mother_id=data['patientId'],
-        doctor_id=current_user.doctor_profile.id,
-        date=data['date'],
-        time=data['time'],
-        appointment_type=data['type']
-    )
+            mother_id=mother_id,
+            doctor_id=doctor_id,
+            date=appointment_date,
+            time=appointment_time,
+            appointment_type=data.get('type', 'Check-up'),
+            status='scheduled'
+        )
+        
+        # Add to database
     db.session.add(appointment)
+        
+        # Check if any changes are pending
+        print(f"Pending changes: {db.session.is_modified(appointment)}")
+        
+        # Commit to database
+        try:
     db.session.commit()
-    return jsonify({"success": True})
+            print(f"Appointment created with ID: {appointment.id}")
+            return jsonify({'success': True, 'appointment_id': appointment.id})
+        except Exception as e:
+            db.session.rollback()
+            print(f"Database error: {e}")
+            
+            # Check for foreign key errors
+            error_msg = str(e).lower()
+            if "foreign key constraint" in error_msg:
+                if "doctor_id" in error_msg:
+                    print(f"Foreign key error with doctor_id={doctor_id}")
+                    # Try to find what's wrong
+                    doctor_exists = DoctorProfile.query.filter_by(user_id=doctor_id).first()
+                    print(f"Doctor with user_id={doctor_id} exists: {doctor_exists is not None}")
+                
+                if "mother_id" in error_msg:
+                    print(f"Foreign key error with mother_id={mother_id}")
+                    # Try to find what's wrong
+                    mother_exists = MotherProfile.query.filter_by(user_id=mother_id).first()
+                    print(f"Mother with user_id={mother_id} exists: {mother_exists is not None}")
+            
+            return jsonify({'success': False, 'error': f'Database error: {str(e)}'})
+            
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/update_dashboards', methods=['POST'])
 @login_required
@@ -1117,6 +1227,36 @@ def force_verify(email):
         'success': True, 
         'message': f'User {email} has been verified. You can now log in.',
         'redirect': url_for('login')
+    })
+
+# Doctor info for mother's dashboard
+@app.route('/api/mother/doctor_info')
+@login_required
+def get_mother_doctor_info():
+    if current_user.role != 'mother':
+        return jsonify({"success": False, "error": "Unauthorized access"}), 403
+    
+    # Fetch the mother's profile
+    mother_profile = MotherProfile.query.filter_by(user_id=current_user.id).first()
+    
+    if not mother_profile or not mother_profile.doctor_id:
+        return jsonify({"success": False, "message": "No doctor assigned yet"})
+    
+    # Get the doctor's profile and user information
+    doctor_profile = DoctorProfile.query.get(mother_profile.doctor_id)
+    if not doctor_profile:
+        return jsonify({"success": False, "message": "Doctor not found"})
+    
+    doctor_user = User.query.get(doctor_profile.user_id)
+    if not doctor_user:
+        return jsonify({"success": False, "message": "Doctor user not found"})
+    
+    return jsonify({
+        "success": True,
+        "doctor_id": doctor_user.id,  # Return user_id for messaging
+        "doctor_name": doctor_user.full_name,
+        "doctor_email": doctor_user.email,
+        "doctor_specialty": doctor_profile.specialty if hasattr(doctor_profile, 'specialty') else "General"
     })
 
 if __name__ == "__main__":

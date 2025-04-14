@@ -159,15 +159,18 @@
 <body class="bg-gray-50">
     <!-- Sidebar -->
     <nav class="sidebar">
-        <h2 class="text-white text-xl font-bold mb-4">Linda Mama</h2>
+        <div class="flex items-center mb-4">
+            <h2 class="text-white text-xl font-bold">Linda Mama</h2>
+        </div>
         <div>
-            <a href="guardian_dashboard.html" class="nav-link active">
+            <a href="{{ url_for('guardian_dashboard') }}" class="nav-link active">
                 <i class="fas fa-home"></i> Dashboard
             </a>
             <hr class="bg-white opacity-25">
-            <a href="{{ url_for('login') }}" class="nav-link">
+            <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="nav-link">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </a>
+            <form id="logout-form" action="{{ url_for('logout') }}" method="POST" style="display: none;"></form>
         </div>
     </nav>
 
@@ -178,9 +181,14 @@
                 <i class="fas fa-user-shield mr-2 text-blue-500"></i>
                 Guardian Dashboard
             </h1>
+            {% if mother %}
             <p class="text-gray-600 mt-2">Supporting {{ mother.full_name }}'s pregnancy journey</p>
+            {% else %}
+                <p class="text-gray-600 mt-2">No approved mother connections yet</p>
+            {% endif %}
         </div>
 
+        {% if mother and mother_profile %}
         <!-- Pregnancy Overview Card -->
         <div class="floating-card p-6 mb-6">
             <h2 class="text-xl font-semibold mb-4 flex items-center">
@@ -190,35 +198,25 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-blue-50 p-4 rounded-lg text-center">
                     <p class="text-gray-600 text-sm">Current Week</p>
-                    <p class="text-3xl font-bold text-blue-600">{{ mother_profile.current_week if mother_profile and mother_profile.current_week else "?" }}</p>
-                    <p class="text-sm text-gray-600">
-                        {% if mother_profile and mother_profile.trimester == 1 %}
-                            First Trimester
-                        {% elif mother_profile and mother_profile.trimester == 2 %}
-                            Second Trimester
-                        {% elif mother_profile and mother_profile.trimester == 3 %}
-                            Third Trimester
-                        {% else %}
-                            Trimester Unknown
-                        {% endif %}
-                    </p>
+                        <p class="text-3xl font-bold text-blue-600">{{ mother_profile.current_week if mother_profile.current_week else "?" }}</p>
+                        <p class="text-sm text-gray-600">{{ mother_profile.trimester }}</p>
                 </div>
                 <div class="bg-purple-50 p-4 rounded-lg text-center">
                     <p class="text-gray-600 text-sm">Due Date</p>
                     <p class="text-2xl font-bold text-purple-600">
-                        {% if mother_profile and mother_profile.due_date %}
-                            {{ mother_profile.due_date.strftime('%B %d, %Y') }}
+                            {% if mother_profile.due_date %}
+                                {{ mother_profile.due_date.strftime('%B %d, %Y') if mother_profile.due_date else "Not set" }}
                         {% else %}
                             Not set
                         {% endif %}
                     </p>
                     <p class="text-sm text-gray-600">
-                        {% if mother_profile and mother_profile.due_date %}
-                            {% set days_remaining = mother_profile.due_date %}
-                            {% if days_remaining %}
-                                Coming soon!
+                            {% if mother_profile.due_date %}
+                                {% set days_remaining = (mother_profile.due_date - datetime.now().date()).days %}
+                                {% if days_remaining > 0 %}
+                                    {{ days_remaining }} days remaining
                             {% else %}
-                                Date not set
+                                    Due date passed
                             {% endif %}
                         {% else %}
                             Date not set
@@ -228,53 +226,28 @@
                 <div class="bg-green-50 p-4 rounded-lg text-center">
                     <p class="text-gray-600 text-sm">Baby Size</p>
                     <p class="text-2xl font-bold text-green-600">
-                        {% if mother_profile and mother_profile.current_week %}
+                            {% if mother_profile.current_week %}
                             {% if mother_profile.current_week <= 8 %}
-                                Blueberry
+                                    Grape 🍇
                             {% elif mother_profile.current_week <= 12 %}
-                                Lime
+                                    Lime 🍋
                             {% elif mother_profile.current_week <= 16 %}
-                                Avocado
+                                    Avocado 🥑
                             {% elif mother_profile.current_week <= 20 %}
-                                Banana
+                                    Banana 🍌
                             {% elif mother_profile.current_week <= 24 %}
-                                Mango
+                                    Mango 🥭
                             {% elif mother_profile.current_week <= 28 %}
-                                Eggplant
+                                    Eggplant 🍆
                             {% elif mother_profile.current_week <= 32 %}
-                                Pineapple
+                                    Pineapple 🍍
                             {% elif mother_profile.current_week <= 36 %}
-                                Honeydew
+                                    Honeydew 🍈
                             {% else %}
-                                Watermelon
+                                    Watermelon 🍉
                             {% endif %}
                         {% else %}
                             Unknown
-                        {% endif %}
-                    </p>
-                    <p class="text-sm text-gray-600">
-                        {% if mother_profile and mother_profile.current_week %}
-                            {% if mother_profile.current_week <= 8 %}
-                                ~1.5 cm | ~1.5 g
-                            {% elif mother_profile.current_week <= 12 %}
-                                ~5 cm | ~14 g
-                            {% elif mother_profile.current_week <= 16 %}
-                                ~12 cm | ~100 g
-                            {% elif mother_profile.current_week <= 20 %}
-                                ~16 cm | ~300 g
-                            {% elif mother_profile.current_week <= 24 %}
-                                ~21 cm | ~600 g
-                            {% elif mother_profile.current_week <= 28 %}
-                                ~24 cm | ~900 g
-                            {% elif mother_profile.current_week <= 32 %}
-                                ~28 cm | ~1.7 kg
-                            {% elif mother_profile.current_week <= 36 %}
-                                ~34 cm | ~2.6 kg
-                            {% else %}
-                                ~40 cm | ~3+ kg
-                            {% endif %}
-                        {% else %}
-                            Size unknown
                         {% endif %}
                     </p>
                 </div>
@@ -293,44 +266,32 @@
                         <p class="text-gray-600">Weight</p>
                         <i class="fas fa-weight text-blue-500"></i>
                     </div>
-                    <p class="text-xl font-bold mt-2">{{ metrics.weight if metrics and metrics.weight else "N/A" }} kg</p>
-                    <p class="text-xs text-green-500">Normal range</p>
+                        <p class="text-xl font-bold mt-2">{{ metrics.weight if metrics and metrics.weight else mother_profile.weight if mother_profile.weight else "N/A" }} kg</p>
+                        <p class="text-xs text-gray-500">Last updated: {{ metrics.date_recorded.strftime('%B %d') if metrics and metrics.date_recorded else "Not recorded" }}</p>
                 </div>
                 <div class="border border-gray-200 p-3 rounded-lg">
                     <div class="flex items-center justify-between">
                         <p class="text-gray-600">Blood Pressure</p>
                         <i class="fas fa-stethoscope text-red-500"></i>
                     </div>
-                    <p class="text-xl font-bold mt-2">{{ metrics.blood_pressure if metrics and metrics.blood_pressure else "N/A" }}</p>
-                    <p class="text-xs text-green-500">Normal</p>
+                        <p class="text-xl font-bold mt-2">{{ metrics.blood_pressure if metrics and metrics.blood_pressure else mother_profile.blood_pressure if mother_profile.blood_pressure else "N/A" }}</p>
+                        <p class="text-xs text-gray-500">Last updated: {{ metrics.date_recorded.strftime('%B %d') if metrics and metrics.date_recorded else "Not recorded" }}</p>
                 </div>
                 <div class="border border-gray-200 p-3 rounded-lg">
                     <div class="flex items-center justify-between">
-                        <p class="text-gray-600">Last Checkup</p>
-                        <i class="fas fa-calendar-check text-purple-500"></i>
+                            <p class="text-gray-600">Blood Sugar</p>
+                            <i class="fas fa-tint text-purple-500"></i>
                     </div>
-                    <p class="text-xl font-bold mt-2">
-                        {% if metrics and metrics.date_recorded %}
-                            {{ metrics.date_recorded.strftime('%B %d') }}
-                        {% else %}
-                            Not recorded
-                        {% endif %}
-                    </p>
-                    <p class="text-xs text-gray-500">
-                        {% if metrics and metrics.date_recorded %}
-                            Recently recorded
-                        {% else %}
-                            No data
-                        {% endif %}
-                    </p>
+                        <p class="text-xl font-bold mt-2">{{ metrics.blood_sugar if metrics and metrics.blood_sugar else mother_profile.sugar_levels if mother_profile.sugar_levels else "N/A" }}</p>
+                        <p class="text-xs text-gray-500">Last updated: {{ metrics.date_recorded.strftime('%B %d') if metrics and metrics.date_recorded else "Not recorded" }}</p>
                 </div>
                 <div class="border border-gray-200 p-3 rounded-lg">
                     <div class="flex items-center justify-between">
-                        <p class="text-gray-600">Overall Status</p>
-                        <i class="fas fa-check-circle text-green-500"></i>
+                            <p class="text-gray-600">BMI</p>
+                            <i class="fas fa-calculator text-green-500"></i>
                     </div>
-                    <p class="text-xl font-bold mt-2 text-green-600">Healthy</p>
-                    <p class="text-xs text-gray-500">No concerns</p>
+                        <p class="text-xl font-bold mt-2">{{ metrics.bmi if metrics and metrics.bmi else mother_profile.bmi if mother_profile.bmi else "N/A" }}</p>
+                        <p class="text-xs text-gray-500">Last updated: {{ metrics.date_recorded.strftime('%B %d') if metrics and metrics.date_recorded else "Not recorded" }}</p>
                 </div>
             </div>
         </div>
@@ -339,38 +300,30 @@
         <div class="floating-card p-6 mb-6">
             <h2 class="text-xl font-semibold mb-4 flex items-center">
                 <i class="fas fa-calendar-alt text-blue-500 mr-2"></i>
-                Next Appointment
+                    Upcoming Appointments
             </h2>
-            {% if appointments and appointments|length > 0 %}
-                {% set next_appointment = appointments[0] %}
+                {% if appointments %}
+                    <div class="space-y-4">
+                        {% for appointment in appointments %}
                 <div class="bg-blue-50 p-4 rounded-lg">
                     <div class="flex justify-between items-center">
                         <div>
-                            <p class="text-lg font-medium">{{ next_appointment.appointment_type }}</p>
+                                        <p class="text-lg font-medium">{{ appointment.appointment_type }}</p>
                             <p class="text-gray-600">
-                                {% if next_appointment.doctor %}
-                                    With Dr. {{ next_appointment.doctor.user.full_name }}
-                                {% else %}
-                                    Doctor not assigned
-                                {% endif %}
+                                            With Dr. {{ appointment.doctor_name if appointment.doctor_name else "Not assigned" }}
                             </p>
                             <p class="text-gray-600 mt-2">
                                 <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
-                                {% if next_appointment.doctor and next_appointment.doctor.hospital %}
-                                    {{ next_appointment.doctor.hospital }}
-                                {% else %}
-                                    Hospital not specified
-                                {% endif %}
+                                            {{ appointment.hospital if appointment.hospital else "Hospital not specified" }}
                             </p>
                         </div>
                         <div class="text-right">
-                            <p class="text-lg font-medium text-blue-600">{{ next_appointment.date.strftime('%B %d, %Y') }}</p>
-                            <p class="text-gray-600">{{ next_appointment.time.strftime('%I:%M %p') }}</p>
-                            <button class="mt-2 bg-blue-600 text-white py-1 px-3 rounded-lg text-sm hover:bg-blue-700">
-                                <i class="fas fa-calendar-plus mr-1"></i> Add to Calendar
-                            </button>
+                                        <p class="text-lg font-medium text-blue-600">{{ appointment.date.strftime('%B %d, %Y') }}</p>
+                                        <p class="text-gray-600">{{ appointment.time.strftime('%I:%M %p') }}</p>
                         </div>
                     </div>
+                            </div>
+                        {% endfor %}
                 </div>
             {% else %}
                 <div class="bg-gray-50 p-4 rounded-lg text-center">
@@ -386,28 +339,47 @@
                 Helpful Tips for Supporting Her
             </h2>
             <div class="space-y-4">
+                    {% if mother_profile.trimester == "First Trimester" %}
                 <div class="tip-card">
-                    <h3 class="font-medium text-blue-600"><i class="fas fa-utensils mr-2"></i>Nutrition Support</h3>
-                    <p class="text-gray-600">Encourage balanced meals with plenty of protein, iron, and folic acid. Prepare small, frequent meals if she experiences nausea.</p>
+                            <h3 class="font-medium text-blue-600"><i class="fas fa-utensils mr-2"></i>Morning Sickness Support</h3>
+                            <p class="text-gray-600">Keep crackers and ginger tea handy. Small, frequent meals can help with nausea.</p>
                 </div>
+                    {% elif mother_profile.trimester == "Second Trimester" %}
                 <div class="tip-card">
-                    <h3 class="font-medium text-purple-600"><i class="fas fa-bed mr-2"></i>Rest & Comfort</h3>
-                    <p class="text-gray-600">Help create a comfortable sleeping environment. A pregnancy pillow can help alleviate back pain in the second trimester.</p>
+                            <h3 class="font-medium text-purple-600"><i class="fas fa-bed mr-2"></i>Sleep Support</h3>
+                            <p class="text-gray-600">Help set up pregnancy pillows for better sleep. Back pain may start becoming an issue.</p>
                 </div>
+                    {% elif mother_profile.trimester == "Third Trimester" %}
                 <div class="tip-card">
-                    <h3 class="font-medium text-green-600"><i class="fas fa-walking mr-2"></i>Exercise Companion</h3>
-                    <p class="text-gray-600">Join her for gentle walks - 30 minutes daily can improve circulation and mood. Swimming is also an excellent low-impact exercise.</p>
+                            <h3 class="font-medium text-green-600"><i class="fas fa-home mr-2"></i>Nesting Support</h3>
+                            <p class="text-gray-600">Help with nursery preparation and ensure she's not lifting heavy items.</p>
                 </div>
+                    {% endif %}
                 <div class="tip-card">
                     <h3 class="font-medium text-red-600"><i class="fas fa-heart mr-2"></i>Emotional Support</h3>
-                    <p class="text-gray-600">Pregnancy hormones can cause mood swings. Be patient, listen actively, and acknowledge her feelings without judgment.</p>
-                </div>
-                <div class="tip-card">
-                    <h3 class="font-medium text-orange-600"><i class="fas fa-notes-medical mr-2"></i>Doctor's Appointments</h3>
-                    <p class="text-gray-600">Attend appointments when possible and help keep track of questions to ask the healthcare provider.</p>
+                        <p class="text-gray-600">Be patient and understanding. Pregnancy can bring many emotional changes.</p>
+                    </div>
+                    <div class="tip-card">
+                        <h3 class="font-medium text-orange-600"><i class="fas fa-notes-medical mr-2"></i>Medical Support</h3>
+                        <p class="text-gray-600">Keep track of appointments and help maintain health records.</p>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% else %}
+            <div class="floating-card p-6">
+                <div class="text-center">
+                    <i class="fas fa-user-shield text-gray-400 text-5xl mb-4"></i>
+                    <h2 class="text-xl font-semibold text-gray-700">No Active Mother Connections</h2>
+                    <p class="text-gray-600 mt-2">
+                        {% if pending_mothers %}
+                            You have pending requests. Please wait for approval.
+                        {% else %}
+                            You currently don't have any mother connections or pending requests.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        {% endif %}
     </main>
 
     <script>

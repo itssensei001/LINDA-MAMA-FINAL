@@ -208,17 +208,16 @@
             <div class="col-md-4">
                 <div class="card p-3 mb-4">
                     <h5 class="text-primary"><i class="fas fa-user-md me-2"></i> Chat with a Doctor</h5>
-                    <div class="doctor-chat-container bg-light p-2 mb-2" style="height: 200px; overflow-y: auto; border-radius: 8px;">
+                    <div class="doctor-chat-container bg-light p-2 mb-2" style="height: 300px; overflow-y: auto; border-radius: 8px;">
                         <div class="chat-messages" id="doctorChatMessages">
-                            <div class="message doctor-message mb-2">
-                                <small class="text-muted">Dr. Sarah (OB/GYN)</small>
-                                <p class="mb-0 bg-primary text-white p-2 rounded">Hello! How can I help you today?</p>
+                            <!-- Chat messages will load here -->
+                            <div class="text-center mt-3">
+                                <small class="text-muted">Loading chat history...</small>
                             </div>
-                            <!-- Messages will appear here -->
                         </div>
                     </div>
-                    <div class="input-group">
-                        <input type="text" id="doctorMessageInput" class="form-control" placeholder="Type your question for the doctor...">
+                    <div class="input-group" style="border-radius: 20px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <input type="text" id="doctorMessageInput" class="form-control border-0" placeholder="Type your message...">
                         <button class="btn btn-primary" id="sendDoctorMsgBtn" title="Send message to doctor">
                             <i class="fas fa-paper-plane"></i>
                         </button>
@@ -279,30 +278,203 @@
         }
 
         document.addEventListener("DOMContentLoaded", function () {
-            // Doctor Chat Functionality
+            // Doctor Chat Variables
             const doctorMessageInput = document.getElementById("doctorMessageInput");
             const sendDoctorMsgBtn = document.getElementById("sendDoctorMsgBtn");
             const doctorChatMessages = document.getElementById("doctorChatMessages");
+            let doctorId = null;
+            let doctorName = "Your Doctor";
+            
+            // Load doctor info and chat history when page loads
+            fetchDoctorInfo();
+            
+            // Set up refresh interval for chat
+            setInterval(function() {
+                if (doctorId) {
+                    fetchDoctorChatHistory();
+                }
+            }, 5000); // Refresh every 5 seconds
+
+            // Doctor Chat Functions
+            function fetchDoctorInfo() {
+                fetch('/api/mother/doctor_info')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            doctorId = data.doctor_id;
+                            doctorName = data.doctor_name;
+                            document.querySelector(".col-md-4 h5.text-primary").innerHTML = 
+                                `<i class="fas fa-user-md me-2"></i> Chat with Dr. ${doctorName}`;
+                            
+                            // Now fetch chat history
+                            fetchDoctorChatHistory();
+                        } else {
+                            // No doctor assigned or error
+                            doctorChatMessages.innerHTML = `
+                                <div class="text-center mt-4">
+                                    <i class="fas fa-exclamation-circle text-warning"></i>
+                                    <p class="mt-2">No doctor has been assigned to you yet.</p>
+                                </div>`;
+                            // Disable the input field and button
+                            doctorMessageInput.disabled = true;
+                            sendDoctorMsgBtn.disabled = true;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching doctor info:', error);
+                        doctorChatMessages.innerHTML = `
+                            <div class="text-center mt-4">
+                                <i class="fas fa-exclamation-circle text-danger"></i>
+                                <p class="mt-2">Error loading doctor information. Please try again later.</p>
+                            </div>`;
+                    });
+            }
+
+            function fetchDoctorChatHistory() {
+                if (!doctorId) return;
+                
+                fetch(`/api/messages/conversation/${doctorId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Only refresh display if there are new messages or no messages were displayed yet
+                        const currentMsgCount = doctorChatMessages.querySelectorAll('.message').length;
+                        
+                        if (data.conversation && (data.conversation.length > currentMsgCount || currentMsgCount === 0)) {
+                            doctorChatMessages.innerHTML = ''; // Clear loading message
+                            
+                            if (data.conversation.length === 0) {
+                                // No messages yet
+                                doctorChatMessages.innerHTML = `
+                                    <div class="text-center mt-4">
+                                        <p class="text-muted">No messages yet. Send a message to your doctor!</p>
+                                    </div>`;
+                            } else {
+                                // Display all messages in WhatsApp style
+                                data.conversation.forEach(msg => {
+                                    const isSender = msg.is_sender;
+                                    const content = msg.content;
+                                    const timestamp = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                                    
+                                    // Create message element
+                                    const msgElement = document.createElement('div');
+                                    msgElement.className = 'message mb-3';
+                                    
+                                    if (isSender) {
+                                        // Message from mother (current user)
+                                        msgElement.innerHTML = `
+                                            <div class="d-flex justify-content-end">
+                                                <div style="max-width: 80%; background-color: #dcf8c6; padding: 8px 12px; border-radius: 8px 0px 8px 8px; box-shadow: 0 1px 1px rgba(0,0,0,0.1);">
+                                                    <div>${content}</div>
+                                                    <div class="text-end" style="font-size: 0.7rem; color: #888; margin-top: 3px;">${timestamp}</div>
+                                                </div>
+                                            </div>
+                                        `;
+                                    } else {
+                                        // Message from doctor
+                                        msgElement.innerHTML = `
+                                            <div class="d-flex justify-content-start">
+                                                <div style="max-width: 80%; background-color: white; padding: 8px 12px; border-radius: 0px 8px 8px 8px; box-shadow: 0 1px 1px rgba(0,0,0,0.1);">
+                                                    <div>${content}</div>
+                                                    <div style="font-size: 0.7rem; color: #888; margin-top: 3px;">${timestamp}</div>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }
+                                    
+                                    doctorChatMessages.appendChild(msgElement);
+                                });
+                                
+                                // Scroll to bottom
+                                doctorChatMessages.scrollTop = doctorChatMessages.scrollHeight;
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching chat history:', error);
+                        // Don't change the display if there was an error loading
+                    });
+            }
 
             sendDoctorMsgBtn.addEventListener("click", function() {
-                const message = doctorMessageInput.value.trim();
-                if (message !== "") {
-                    // Add user message
-                    addMessage(doctorChatMessages, message, "user");
-                    doctorMessageInput.value = "";
-
-                    // Here you would integrate with your backend service for doctor responses
-                    // The actual integration will replace this placeholder
-                    console.log("Message sent to doctor: " + message);
-                    
-                    // Temporarily display a sending message until integration is complete
-                    const messageDiv = document.createElement("div");
-                    messageDiv.className = "system-message text-center my-2";
-                    messageDiv.innerHTML = '<small class="text-muted">Message sent to doctor</small>';
-                    doctorChatMessages.appendChild(messageDiv);
-                    doctorChatMessages.scrollTop = doctorChatMessages.scrollHeight;
+                sendDoctorMessage();
+            });
+            
+            doctorMessageInput.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    sendDoctorMessage();
                 }
             });
+            
+            function sendDoctorMessage() {
+                const message = doctorMessageInput.value.trim();
+                if (message !== "" && doctorId) {
+                    // Clear input immediately
+                    doctorMessageInput.value = "";
+                    
+                    // Add message to UI immediately for better UX
+                    const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const msgElement = document.createElement('div');
+                    msgElement.className = 'message mb-3';
+                    msgElement.innerHTML = `
+                        <div class="d-flex justify-content-end">
+                            <div style="max-width: 80%; background-color: #dcf8c6; padding: 8px 12px; border-radius: 8px 0px 8px 8px; box-shadow: 0 1px 1px rgba(0,0,0,0.1);">
+                                <div>${message}</div>
+                                <div class="text-end" style="font-size: 0.7rem; color: #888; margin-top: 3px;">${timestamp}</div>
+                            </div>
+                        </div>
+                    `;
+                    doctorChatMessages.appendChild(msgElement);
+                    
+                    // Scroll to bottom
+                    doctorChatMessages.scrollTop = doctorChatMessages.scrollHeight;
+                    
+                    // Send message to server
+                    fetch('/api/messages/send', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            receiver_id: doctorId,
+                            content: message,
+                            message_type: 'user'
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data.success) {
+                            // Show error if message wasn't sent successfully
+                            const errorDiv = document.createElement("div");
+                            errorDiv.className = "text-center my-2";
+                            errorDiv.innerHTML = '<small class="text-danger">Failed to send message</small>';
+                            doctorChatMessages.appendChild(errorDiv);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error sending message:', error);
+                        const errorDiv = document.createElement("div");
+                        errorDiv.className = "text-center my-2";
+                        errorDiv.innerHTML = '<small class="text-danger">Failed to send message</small>';
+                        doctorChatMessages.appendChild(errorDiv);
+                    });
+                }
+            }
 
             // AI Assistant Functionality
             const aiMessageInput = document.getElementById("aiMessageInput");
@@ -338,7 +510,7 @@
                 let bgClass = "";
                 
                 if (sender === "doctor") {
-                    senderName = "Dr. Sarah (OB/GYN)";
+                    senderName = `Dr. ${doctorName}`;
                     bgClass = "bg-primary";
                 } else if (sender === "ai") {
                     senderName = "AI Assistant";
@@ -360,12 +532,14 @@
             // Add event listeners for Enter key
             doctorMessageInput.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
+                    event.preventDefault();
                     sendDoctorMsgBtn.click();
                 }
             });
 
             aiMessageInput.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
+                    event.preventDefault();
                     sendAiMsgBtn.click();
                 }
             });

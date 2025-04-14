@@ -242,9 +242,8 @@
                 </select>
             
                 <!-- Mother's Email (Hidden by Default) -->
-                <div id="motherEmailField" style="display: none; margin-bottom: 15px;">
-                    <label for="mother_email">Mother's Email:</label>
-                    <input type="email" id="mother_email" name="mother_email" placeholder="Enter the mother's email address">
+                <div id="motherEmailField" style="display: none;">
+                    <input type="email" id="mother_email" name="mother_email" placeholder="Mother's Email">
                 </div>
             
                 <button type="submit">Sign Up</button>
@@ -291,16 +290,13 @@
         }
 
         function toggleGuardianField() {
-                var roleSelect = document.getElementById("role");
-                var motherEmailFieldDiv = document.getElementById("motherEmailField");
-                var motherEmailInput = document.getElementById("mother_email");
+                var role = document.getElementById("role").value;
+                var motherEmailField = document.getElementById("motherEmailField");
 
-                if (roleSelect.value === "guardian") {
-                    motherEmailFieldDiv.style.display = "block";
-                    motherEmailInput.required = true; // Make required only when visible
+                if (role === "guardian") {
+                    motherEmailField.style.display = "block";
                 } else {
-                    motherEmailFieldDiv.style.display = "none";
-                    motherEmailInput.required = false; // Not required when hidden
+                    motherEmailField.style.display = "none";
                 }
             }
 
