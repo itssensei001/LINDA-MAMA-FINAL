@@ -182,7 +182,7 @@
         <h2 class="text-2xl font-semibold text-gray-700 mb-4">Community and Support</h2>
 
         <div class="row mt-4">
-            <!-- Left Section: Create Post & Categories -->
+            <!-- Left Section: Create Post, Categories & Doctor Chat -->
             <div class="col-md-8">
                 <div class="card p-3 mb-4">
                     <h5 class="text-primary">Create a New Post</h5>
@@ -202,10 +202,8 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Right Section: Ask A Doctor -->
-            <div class="col-md-4">
+                
+                <!-- Doctor Chat Section (Moved here) -->
                 <div class="card p-3 mb-4">
                     <h5 class="text-primary"><i class="fas fa-user-md me-2"></i> Chat with a Doctor</h5>
                     <div class="doctor-chat-container bg-light p-2 mb-2" style="height: 300px; overflow-y: auto; border-radius: 8px;">
@@ -223,11 +221,14 @@
                         </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- AI Assistant Section -->
-                <div class="card p-3">
+            <!-- Right Section: AI Assistant -->
+            <div class="col-md-4">
+                <!-- AI Assistant Section (Moved to top) -->
+                <div class="card p-3 mb-4">
                     <h5 class="text-primary"><i class="fas fa-robot me-2"></i> Ask AI Assistant</h5>
-                    <div class="ai-chat-container bg-light p-2 mb-2" style="height: 200px; overflow-y: auto; border-radius: 8px;">
+                    <div class="ai-chat-container bg-light p-2 mb-2" style="height: 430px; overflow-y: auto; border-radius: 8px;">
                         <div class="chat-messages" id="aiChatMessages">
                             <div class="message ai-message mb-2">
                                 <small class="text-muted">AI Assistant</small>
