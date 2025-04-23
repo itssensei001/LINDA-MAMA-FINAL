@@ -211,9 +211,9 @@ class Notification(db.Model):
 # ---------------------------------------------------
 # 4) Routes
 # ---------------------------------------------------
-@app.route('/')
-def index():
-    return redirect(url_for('login'))
+# @app.route('/')
+# def index():
+    # return redirect(url_for('login'))
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -222,31 +222,26 @@ def signup():
         password = request.form.get('password')
         full_name = request.form.get('full_name')
         role = request.form.get('role')
-        
-        # Use email as username
-        username = email
-        
-        # Check if user already exists - FIRST CHECK
+
+        # --- Existing checks (email exists, domain, password complexity) ---
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             flash('Account already exists. Please login instead.')
             return redirect(url_for('login'))
-        
-        # Check email domain - SECOND CHECK
+
         if not (email.endswith('@gmail.com') or email.endswith('@yahoo.com')):
-            flash('Email must be a Gmail or Yahoo address.')
-            return redirect(url_for('signup'))
-        
-        # Validate password - THIRD CHECK
+             flash('Email must be a Gmail or Yahoo address.')
+             return redirect(url_for('signup'))
+
         password_regex = re.compile(r'^(?=.*\d)(?=.*[!@#$%^&*\.])[a-zA-Z0-9!@#$%^&*\.]{6,}$')
         if not password_regex.match(password):
             flash('Password must be at least 6 characters long and include at least 1 number and 1 symbol.')
             return redirect(url_for('signup'))
-        
-        # Create verification token
+        # --- End of existing checks ---
+
         verification_token = secrets.token_urlsafe(32)
-        
-        # Create new user with username field set
+        username = email # Use email as username
+
         new_user = User(
             username=username,
             email=email,
@@ -255,26 +250,79 @@ def signup():
             verification_token=verification_token
         )
         new_user.set_password(password)
-        
-        db.session.add(new_user)
-        db.session.commit()
-        
-        # Try to send email, but also provide direct verification link
-        verification_url = url_for('verify_email', token=verification_token, _external=True)
+
         try:
-            email_sent = send_verification_email(new_user)
-            if email_sent:
-                flash(f'Account created! Please check your email to verify your account. You must verify your email before logging in.')
-            else:
-                # Email sending failed, provide direct verification link
-                flash(f'Email could not be sent. Please click this link to verify your account: <a href="{verification_url}" class="verification-link">Verify Account</a>', 'verification')
+            db.session.add(new_user)
+            db.session.flush() # Flush to get the new_user.id
+
+            assigned_doctor_profile_id = None # Keep track of assigned doctor
+
+            # --- Doctor Assignment Logic (if role is 'mother') ---
+            if role == 'mother':
+                # Find available doctors
+                # Consider adding more sophisticated logic here (e.g., load balancing)
+                available_doctors = DoctorProfile.query.all()
+
+                if available_doctors:
+                    # Simple random assignment for now
+                    chosen_doctor_profile = random.choice(available_doctors)
+                    assigned_doctor_profile_id = chosen_doctor_profile.id # Store the DoctorProfile ID
+                    print(f"Assigning mother {new_user.email} to doctor profile ID {assigned_doctor_profile_id}") # Debug print
+
+                    # Create the MotherProfile and link the doctor
+                    mother_profile = MotherProfile(
+                        user_id=new_user.id,
+                        doctor_id=assigned_doctor_profile_id # Assign the DoctorProfile ID here
+                        # Initialize other fields as needed, e.g., weight=0, etc.
+                    )
+                    db.session.add(mother_profile)
+                else:
+                    # Handle case where no doctors are available
+                    print(f"No doctors available to assign to mother {new_user.email}")
+                    # Create profile without a doctor for now
+                    mother_profile = MotherProfile(user_id=new_user.id)
+                    db.session.add(mother_profile)
+
+            # --- Handle Doctor Profile Creation (if role is 'doctor') ---
+            elif role == 'doctor':
+                 # Ensure a DoctorProfile is created for the new doctor user
+                 # You might want to collect specialty/hospital info during signup
+                 # or have a separate profile completion step.
+                 doctor_profile = DoctorProfile(
+                     user_id=new_user.id,
+                     specialty="General Practice", # Example default
+                     hospital="Community Hospital" # Example default
+                 )
+                 db.session.add(doctor_profile)
+
+            # --- Handle Guardian Request (if role is 'guardian') ---
+            # (Keep your existing guardian logic here if needed)
+            # elif role == 'guardian': ...
+
+            # Commit all changes (user, profile, assignment)
+            db.session.commit()
+
+            # --- Email Verification Logic ---
+            verification_url = url_for('verify_email', token=verification_token, _external=True)
+            try:
+                email_sent = send_verification_email(new_user)
+                if email_sent:
+                    flash(f'Account created! Please check your email to verify your account. You must verify your email before logging in.')
+                else:
+                    flash(f'Email could not be sent. Please click this link to verify your account: <a href="{verification_url}" class="verification-link">Verify Account</a>', 'verification')
+            except Exception as e:
+                print(f"Error in signup sending email: {str(e)}")
+                flash(f'Account created! Click this link to verify your account: <a href="{verification_url}" class="verification-link">Verify Account</a>', 'verification')
+            # --- End Email Verification ---
+
+            return redirect(url_for('login'))
+
         except Exception as e:
-            print(f"Error in signup: {str(e)}")
-            # Provide direct verification link on error
-            flash(f'Account created! Click this link to verify your account: <a href="{verification_url}" class="verification-link">Verify Account</a>', 'verification')
-        
-        return redirect(url_for('login'))
-    
+            db.session.rollback() # Rollback in case of error during assignment or profile creation
+            print(f"Error during signup or assignment: {str(e)}")
+            flash('An error occurred during signup. Please try again.')
+            return redirect(url_for('signup'))
+
     return render_template('signup.html')
 
 def send_verification_email(user):
@@ -301,14 +349,14 @@ def send_verification_email(user):
         print(f"Attempting to send email to: {user.email}")
         print(f"Verification URL: {verification_url}")
         
-    mail.send(msg)
+        mail.send(msg)
         print(f"Email sent successfully to {user.email}")
         return True
     except Exception as e:
         print(f"Failed to send email to {user.email}: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return False
+    import traceback
+    traceback.print_exc()
+    return False
 
 @app.route('/verify-email/<token>')
 def verify_email(token):
@@ -359,32 +407,49 @@ def mother_dashboard():
     if current_user.role != 'mother':
         return redirect(url_for('login'))
 
-    # Fetch the mother's profile
     mother_profile = MotherProfile.query.filter_by(user_id=current_user.id).first()
 
     if not mother_profile:
-        # Create a new mother profile instead of redirecting
         mother_profile = MotherProfile(user_id=current_user.id)
         db.session.add(mother_profile)
         db.session.commit()
         flash("Welcome! Your profile has been created.")
 
-    # Fetch latest health metrics
+    # --- Fetch Assigned Doctor Details ---
+    doctor_details = None
+    if mother_profile.doctor_id:
+        # Join DoctorProfile with User table to get the doctor's name
+        doctor_info = db.session.query(DoctorProfile, User)\
+            .join(User, User.id == DoctorProfile.user_id)\
+            .filter(DoctorProfile.id == mother_profile.doctor_id)\
+            .first()
+        if doctor_info:
+            doctor_profile, doctor_user = doctor_info
+            doctor_details = {
+                'full_name': doctor_user.full_name,
+                'specialty': doctor_profile.specialty,
+                 'hospital': doctor_profile.hospital
+                # Add other details if needed
+            }
+    # --- End Fetch Doctor Details ---
+
     latest_metrics = HealthMetric.query.filter_by(mother_id=current_user.id).order_by(HealthMetric.date_recorded.desc()).first()
-    
-    # Get upcoming appointments
-    appointments = Appointment.query.filter_by(
-        mother_id=current_user.id, 
-        status='scheduled'
-    ).order_by(Appointment.date).limit(3).all()
-    
-    # Get pending guardian requests
+
+    # --- Fetch Actual Upcoming Appointments ---
+    # Query appointments specifically for this mother
+    upcoming_appointments = Appointment.query.filter(
+        Appointment.mother_id == current_user.id, # Filter by mother's user_id
+        Appointment.status == 'scheduled',
+        Appointment.date >= datetime.utcnow().date() # Show only today or future appointments
+    ).order_by(Appointment.date, Appointment.time).limit(5).all() # Limit to 5 for the dashboard
+    # --- End Fetch Appointments ---
+
+
     guardian_requests_query = GuardianRequest.query.filter_by(
         mother_email=current_user.email,
         status='pending'
     ).all()
-    
-    # Convert guardian requests to serializable dictionaries
+
     guardian_requests = []
     for request in guardian_requests_query:
         guardian = User.query.get(request.guardian_id)
@@ -394,14 +459,16 @@ def mother_dashboard():
             'guardian_name': guardian.full_name if guardian else 'Unknown',
             'request_date': request.request_date.strftime('%Y-%m-%d')
         })
-    
+
     return render_template(
-        'mother/mother_dashboard.html',
+        'mother/mother_dashboard.html', # Ensure this path is correct
         mother_profile=mother_profile,
         metrics=latest_metrics,
-        appointments=appointments,
+        appointments=upcoming_appointments, # Pass the actual appointments
+        doctor_details=doctor_details, # Pass the doctor details
         guardian_requests=guardian_requests
     )
+
 
 @app.route("/google_login")
 def google_login():
@@ -1055,87 +1122,99 @@ def schedule_appointment():
     data = request.json
     print(f"Received appointment data: {data}")
     print(f"Current user: {current_user.id} ({current_user.role})")
-    
+
     # Validate required data
-    if not data.get('patientId'):
+    # Use .get() with default to avoid KeyError if key is missing
+    patient_id = data.get('patientId')
+    appointment_date_str = data.get('date')
+    appointment_time_str = data.get('time')
+
+    if not patient_id:
         return jsonify({'success': False, 'error': 'Patient ID is required'})
-    
-    if not data.get('date') or not data.get('time'):
+
+    if not appointment_date_str or not appointment_time_str:
         return jsonify({'success': False, 'error': 'Date and time are required'})
-    
+
     try:
-        # Get mother profile from patient ID
-        mother_profile = MotherProfile.query.get(data['patientId'])
-        
-        if not mother_profile:
-            print(f"Patient ID {data['patientId']} not found")
-            return jsonify({'success': False, 'error': 'Patient not found'})
-        
+        # Get mother profile from patient ID (assuming patientId is MotherProfile.id)
+        # Use get_or_404 for cleaner handling if ID doesn't exist
+        mother_profile = MotherProfile.query.get_or_404(patient_id)
+
         # The mother_id should be the user_id of the mother
         mother_id = mother_profile.user_id
         print(f"Using mother_id (user_id): {mother_id}")
-        
+
         # IMPORTANT: doctor_id in Appointment refers to doctor_profiles.user_id, NOT doctor_profiles.id
         # So we need to use current_user.id directly, not the doctor profile ID
-        doctor_id = current_user.id
+        # Verify doctor profile exists for the current user first
+        if not current_user.doctor_profile:
+             logging.error(f"Doctor profile missing for user {current_user.id}")
+             return jsonify({'success': False, 'error': 'Doctor profile missing'})
+
+        doctor_id = current_user.id # Link appointment to the doctor's User ID
         print(f"Using doctor_id (user_id): {doctor_id}")
-        
+
         # Parse date and time
         try:
-            appointment_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
-            appointment_time = datetime.strptime(data['time'], '%H:%M').time()
+            appointment_date = datetime.strptime(appointment_date_str, '%Y-%m-%d').date()
+            appointment_time = datetime.strptime(appointment_time_str, '%H:%M').time()
+            # Basic validation
+            if appointment_date < datetime.utcnow().date():
+                 return jsonify({'success': False, 'error': 'Cannot schedule appointment in the past'})
         except ValueError as e:
             print(f"Date/time parsing error: {e}")
-            return jsonify({'success': False, 'error': 'Invalid date or time format'})
-        
+            return jsonify({'success': False, 'error': 'Invalid date or time format (YYYY-MM-DD, HH:MM)'})
+
         print(f"Creating appointment: mother_id={mother_id}, doctor_id={doctor_id}, date={appointment_date}, time={appointment_time}")
-        
+
         # Create appointment
-    appointment = Appointment(
+        appointment = Appointment(
             mother_id=mother_id,
-            doctor_id=doctor_id,
+            doctor_id=doctor_id, # Storing User ID of the doctor
             date=appointment_date,
             time=appointment_time,
             appointment_type=data.get('type', 'Check-up'),
             status='scheduled'
         )
-        
+
         # Add to database
-    db.session.add(appointment)
-        
-        # Check if any changes are pending
-        print(f"Pending changes: {db.session.is_modified(appointment)}")
-        
-        # Commit to database
+        db.session.add(appointment)
+
+        # Check if any changes are pending (Optional Debug)
+        # print(f"Pending changes: {db.session.is_modified(appointment)}")
+
+        # Commit to database - INDENTATION CORRECTED HERE
         try:
-    db.session.commit()
+            db.session.commit()
             print(f"Appointment created with ID: {appointment.id}")
+            # Optionally add notification logic here
             return jsonify({'success': True, 'appointment_id': appointment.id})
         except Exception as e:
             db.session.rollback()
-            print(f"Database error: {e}")
-            
-            # Check for foreign key errors
+            print(f"Database commit error: {e}")
+            logging.exception("Database commit error during appointment scheduling:") # Log full traceback
+
+            # Check for foreign key errors (Optional Debug)
             error_msg = str(e).lower()
             if "foreign key constraint" in error_msg:
                 if "doctor_id" in error_msg:
-                    print(f"Foreign key error with doctor_id={doctor_id}")
-                    # Try to find what's wrong
-                    doctor_exists = DoctorProfile.query.filter_by(user_id=doctor_id).first()
-                    print(f"Doctor with user_id={doctor_id} exists: {doctor_exists is not None}")
-                
+                    print(f"Foreign key error likely related to doctor_id={doctor_id}")
+                    doctor_exists = User.query.get(doctor_id) # Check if doctor user exists
+                    print(f"Doctor user with user_id={doctor_id} exists: {doctor_exists is not None}")
+
                 if "mother_id" in error_msg:
-                    print(f"Foreign key error with mother_id={mother_id}")
-                    # Try to find what's wrong
-                    mother_exists = MotherProfile.query.filter_by(user_id=mother_id).first()
-                    print(f"Mother with user_id={mother_id} exists: {mother_exists is not None}")
-            
-            return jsonify({'success': False, 'error': f'Database error: {str(e)}'})
-            
+                    print(f"Foreign key error likely related to mother_id={mother_id}")
+                    mother_exists = User.query.get(mother_id) # Check if mother user exists
+                    print(f"Mother user with user_id={mother_id} exists: {mother_exists is not None}")
+
+            return jsonify({'success': False, 'error': f'Database error occurred.'})
+
     except Exception as e:
-        print(f"Unexpected error: {e}")
-        traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)})
+        # Catch errors like query.get_or_404 failure or other unexpected issues
+        print(f"Unexpected error in schedule_appointment: {e}")
+        logging.exception("Unexpected error during appointment scheduling:")
+        # Use traceback if imported at top of file: traceback.print_exc()
+        return jsonify({'success': False, 'error': 'An unexpected error occurred.'})
 
 @app.route('/update_dashboards', methods=['POST'])
 @login_required
