@@ -323,24 +323,30 @@
 
         /* Additional styles for the modal content */
         .bg-blue-100 {
-            background-color: #ebf8ff; /* Light blue background for patient info */
+            background-color: #ebf8ff;
+            /* Light blue background for patient info */
         }
 
         .border {
-            border: 1px solid #e2e8f0; /* Light gray border */
+            border: 1px solid #e2e8f0;
+            /* Light gray border */
         }
 
         .rounded-lg {
-            border-radius: 0.5rem; /* Rounded corners */
+            border-radius: 0.5rem;
+            /* Rounded corners */
         }
 
         .p-4 {
-            padding: 1rem; /* Padding for content */
+            padding: 1rem;
+            /* Padding for content */
         }
 
         .h-48 {
-            height: 12rem; /* Fixed height for chat history */
-            overflow-y: auto; /* Scroll if content overflows */
+            height: 12rem;
+            /* Fixed height for chat history */
+            overflow-y: auto;
+            /* Scroll if content overflows */
         }
     </style>
 
@@ -385,41 +391,42 @@
                     <h2 class="text-xl font-semibold mb-4">Scheduled Appointments</h2>
                     <div class="grid gap-4">
                         {% if appointments %}
-                            {% for appointment in appointments %}
-                                <div class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                                    <div class="flex justify-between items-center">
-                                    <div>
-                                            <h3 class="font-semibold">{{ appointment.patient_name }}</h3>
-                                            <p class="text-sm text-gray-600">
-                                                {{ appointment.date.strftime('%b %d, %Y') }} at {{ appointment.time.strftime('%-I:%M %p') }} - 
-                                                {{ appointment.appointment_type }}
-                                            </p>
-                                    </div>
+                        {% for appointment in appointments %}
+                        <div class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="font-semibold">{{ appointment.patient_name }}</h3>
+                                    <p class="text-sm text-gray-600">
+                                        {{ appointment.date.strftime('%b %d, %Y') }} at {{
+                                        appointment.time.strftime('%-I:%M %p') }} -
+                                        {{ appointment.appointment_type }}
+                                    </p>
+                                </div>
                                 <div class="flex items-center">
-                                            {% set today = datetime.now().date() %}
-                                            {% if appointment.date == today %}
-                                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Today</span>
-                                            {% elif appointment.date > today %}
-                                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Upcoming</span>
-                                            {% else %}
-                                                <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">Past</span>
-                                            {% endif %}
-                                            <button 
-                                                class="ml-2 text-blue-500 hover:text-blue-700"
-                                                title="View patient details"
-                                                onclick="openPatientModal({{appointment.patient_id}}, '{{appointment.patient_name|replace('\'', '\\\'')}}')"
-                                            >
-                                                <i class="fas fa-external-link-alt"></i>
-                                            </button>
-                                    </div>
-                                    </div>
+                                    {% set today = datetime.now().date() %}
+                                    {% if appointment.date == today %}
+                                    <span
+                                        class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Today</span>
+                                    {% elif appointment.date > today %}
+                                    <span
+                                        class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Upcoming</span>
+                                    {% else %}
+                                    <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">Past</span>
+                                    {% endif %}
+                                    <button class="ml-2 text-blue-500 hover:text-blue-700" title="View patient details"
+                                        onclick="openPatientModal({{appointment.patient_id}}, '{{appointment.patient_name|replace('\'', '\\\'')}}')">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </button>
                                 </div>
-                            {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
                         {% else %}
-                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center">
-                                <p class="text-gray-500">No scheduled appointments</p>
-                                <p class="text-sm text-gray-400 mt-1">Schedule appointments with patients from their profile</p>
-                                </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center">
+                            <p class="text-gray-500">No scheduled appointments</p>
+                            <p class="text-sm text-gray-400 mt-1">Schedule appointments with patients from their profile
+                            </p>
+                        </div>
                         {% endif %}
                     </div>
                 </div>
@@ -439,16 +446,15 @@
                 </div>
                 <ul class="space-y-3">
                     {% for patient, user in patients %}
-                        <li class="hover-card p-3 bg-white rounded-lg cursor-pointer transition duration-200 flex items-center" 
-                            onclick="openPatientModal({{patient.id}}, '{{user.full_name|replace('\'', '\\\'')}}')"
-                        >
+                    <li class="hover-card p-3 bg-white rounded-lg cursor-pointer transition duration-200 flex items-center"
+                        onclick="openPatientModal({{patient.id}}, '{{user.full_name|replace('\'', '\\\'')}}')">
                         <div class="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center mr-3">
-                                <span class="text-blue-700 font-medium">{{ user.full_name[0] }}</span>
+                            <span class="text-blue-700 font-medium">{{ user.full_name[0] }}</span>
                         </div>
                         <div class="flex-grow">
-                                <span class="font-medium">{{ user.full_name }}</span>
-                                <p class="text-sm text-gray-500">Trimester: {{ patient.trimester }}</p>
-                                <p class="text-sm text-gray-500">Last visit: {{ patient.last_visit_date }}</p>
+                            <span class="font-medium">{{ user.full_name }}</span>
+                            <p class="text-sm text-gray-500">Trimester: {{ patient.trimester }}</p>
+                            <p class="text-sm text-gray-500">Last visit: {{ patient.last_visit_date }}</p>
                         </div>
                         <i class="fas fa-chevron-right text-gray-400"></i>
                     </li>
@@ -460,11 +466,13 @@
 
     <!-- Patient Profile Modal -->
     <div id="patientModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-lg w-11/12 max-w-5xl h-auto max-h-90vh overflow-auto relative shadow-lg transform scale-100">
+        <div
+            class="bg-white rounded-lg w-11/12 max-w-5xl h-auto max-h-90vh overflow-auto relative shadow-lg transform scale-100">
             <!-- Modal Header -->
             <div class="p-4 border-b flex justify-between items-center bg-blue-50">
                 <div class="flex items-center">
-                    <div id="patientInitialsContainer" class="w-12 h-12 rounded-full flex items-center justify-center mr-3">
+                    <div id="patientInitialsContainer"
+                        class="w-12 h-12 rounded-full flex items-center justify-center mr-3">
                         <span id="patientInitials" class="font-medium">EO</span>
                     </div>
                     <div>
@@ -472,15 +480,16 @@
                         <p id="patientId" class="text-sm text-gray-600">Patient ID: #12345</p>
                     </div>
                 </div>
-                    <button onclick="closePatientModal()" class="text-gray-600 hover:text-gray-800" aria-label="Close Patient Modal">
-                        <i class="fas fa-times text-2xl"></i>
-                    </button>
-                </div>
+                <button onclick="closePatientModal()" class="text-gray-600 hover:text-gray-800"
+                    aria-label="Close Patient Modal">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
             <!-- Modal Content -->
             <div class="flex flex-col p-2">
                 <!-- Top row with patient details and appointment section -->
                 <div class="flex flex-col md:flex-row mb-4">
-                <!-- Patient Details Section -->
+                    <!-- Patient Details Section -->
                     <div class="w-full md:w-1/2 pr-0 md:pr-2 mb-4 md:mb-0">
                         <h3 class="text-base font-semibold">Pregnancy Information</h3>
                         <div class="bg-blue-50 p-1 rounded-lg mb-1">
@@ -488,11 +497,11 @@
                                 <div>
                                     <p class="font-medium text-gray-700">Current Week</p>
                                     <p id="currentWeek" class="text-lg">Loading...</p>
-                            </div>
+                                </div>
                                 <div>
                                     <p class="font-medium text-gray-700">Trimester</p>
                                     <p id="trimester" class="text-lg">Loading...</p>
-                        </div>
+                                </div>
                                 <div>
                                     <p class="font-medium text-gray-700">Due Date</p>
                                     <p id="dueDate" class="text-lg">Loading...</p>
@@ -537,57 +546,77 @@
                                 </div>
                             </div>
                         </div>
-                                </div>
-                <!-- Appointment Section -->
+                    </div>
+                    <!-- Appointment Section -->
                     <div class="w-full md:w-1/2 pl-0 md:pl-2">
                         <h3 class="text-sm font-semibold">Set Appointment</h3>
                         <form id="appointmentForm" class="space-y-1">
-                        <div>
-                                <label for="appointmentType1" class="block text-xs font-medium text-gray-700 mb-0.5">Appointment Type</label>
-                                <select id="appointmentType1" class="w-full p-1 text-xs border rounded-lg focus:ring-1 focus:ring-blue-400">
-                                <option value="virtual">Virtual Check-up</option>
-                                <option value="in-person">In-person Visit</option>
-                            </select>
-                                </div>
-                        <div>
-                                <label for="appointmentDate" class="block text-xs font-medium text-gray-700 mb-1">Date</label>
-                                <input type="date" id="appointmentDate" class="w-full p-1 text-sm border rounded-lg focus:ring-2 focus:ring-blue-400" placeholder="Select a date">
+                            <div>
+                                <label for="appointmentType1"
+                                    class="block text-xs font-medium text-gray-700 mb-0.5">Appointment Type</label>
+                                <select id="appointmentType1"
+                                    class="w-full p-1 text-xs border rounded-lg focus:ring-1 focus:ring-blue-400">
+                                    <option value="virtual">Virtual Check-up</option>
+                                    <option value="in-person">In-person Visit</option>
+                                </select>
                             </div>
-                        <div>
-                                <label for="appointmentTime" class="block text-xs font-medium text-gray-700 mb-1">Time</label>
-                                <input type="time" id="appointmentTime" class="w-full p-1 text-sm border rounded-lg focus:ring-2 focus:ring-blue-400" placeholder="Select a time">
-                        </div>
-                        <div>
-                                <label for="appointmentDuration" class="block text-xs font-medium text-gray-700 mb-1">Duration</label>
-                                <select id="appointmentDuration" class="w-full p-1 text-sm border rounded-lg focus:ring-2 focus:ring-blue-400" aria-label="Select Appointment Duration">
-                                <option value="15">15 minutes</option>
-                                <option value="30" selected>30 minutes</option>
-                                <option value="45">45 minutes</option>
-                                <option value="60">1 hour</option>
-                            </select>
-                                </div>
-                        <div>
+                            <div>
+                                <label for="appointmentDate"
+                                    class="block text-xs font-medium text-gray-700 mb-1">Date</label>
+                                <input type="date" id="appointmentDate"
+                                    class="w-full p-1 text-sm border rounded-lg focus:ring-2 focus:ring-blue-400"
+                                    placeholder="Select a date">
+                            </div>
+                            <div>
+                                <label for="appointmentTime"
+                                    class="block text-xs font-medium text-gray-700 mb-1">Time</label>
+                                <input type="time" id="appointmentTime"
+                                    class="w-full p-1 text-sm border rounded-lg focus:ring-2 focus:ring-blue-400"
+                                    placeholder="Select a time">
+                            </div>
+                            <div>
+                                <label for="appointmentDuration"
+                                    class="block text-xs font-medium text-gray-700 mb-1">Duration</label>
+                                <select id="appointmentDuration"
+                                    class="w-full p-1 text-sm border rounded-lg focus:ring-2 focus:ring-blue-400"
+                                    aria-label="Select Appointment Duration">
+                                    <option value="15">15 minutes</option>
+                                    <option value="30" selected>30 minutes</option>
+                                    <option value="45">45 minutes</option>
+                                    <option value="60">1 hour</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Notes</label>
-                                <textarea id="appointmentNotes" rows="1" class="w-full p-1 text-xs border rounded-lg focus:ring-1 focus:ring-blue-400" placeholder="Brief notes..."></textarea>
-                                </div>
-                            <div class="flex justify-end space-x-2 mt-2">
-                                <button type="button" onclick="closePatientModal()" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50">Cancel</button>
-                                <button type="submit" class="px-3 py-1 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600">Schedule</button>
+                                <textarea id="appointmentNotes" rows="1"
+                                    class="w-full p-1 text-xs border rounded-lg focus:ring-1 focus:ring-blue-400"
+                                    placeholder="Brief notes..."></textarea>
                             </div>
-                    </form>
+                            <div class="flex justify-end space-x-2 mt-2">
+                                <button type="button" onclick="closePatientModal()"
+                                    class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50">Cancel</button>
+                                <button type="submit"
+                                    class="px-3 py-1 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600">Schedule</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </div>
-                
+
                 <!-- Chat Section - Now full width below everything -->
                 <div class="w-full mt-3">
                     <h3 class="text-base font-semibold mb-1">Chat with Patient</h3>
-                    <div id="chatHistory" class="border rounded-lg p-3 bg-gray-50 h-60 overflow-y-auto mb-3" style="box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
-                        <p id="noMessages" class="text-gray-500 text-center py-4 text-sm">No messages yet. Start the conversation!</p>
+                    <div id="chatHistory" class="border rounded-lg p-3 bg-gray-50 h-60 overflow-y-auto mb-3"
+                        style="box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                        <p id="noMessages" class="text-gray-500 text-center py-4 text-sm">No messages yet. Start the
+                            conversation!</p>
                     </div>
                     <div class="mt-3">
                         <div class="flex items-center w-full">
-                            <input type="text" id="messageInput" class="border rounded-l-lg p-2 flex-grow" placeholder="Type a message...">
-                            <button id="sendMessageBtn" class="bg-blue-500 hover:bg-blue-600 text-white rounded-r-lg px-4 py-2" title="Send message" onclick="sendMessage()">
+                            <input type="text" id="messageInput" class="border rounded-l-lg p-2 flex-grow"
+                                placeholder="Type a message...">
+                            <button id="sendMessageBtn"
+                                class="bg-blue-500 hover:bg-blue-600 text-white rounded-r-lg px-4 py-2"
+                                title="Send message" onclick="sendMessage()">
                                 <i class="fas fa-paper-plane"></i>
                             </button>
                         </div>
@@ -602,14 +631,16 @@
         <div class="bg-white rounded-lg w-96 p-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold">Schedule Appointment</h3>
-                <button onclick="closeScheduleModal()" class="text-gray-600 hover:text-gray-800" aria-label="Close Schedule Modal">
+                <button onclick="closeScheduleModal()" class="text-gray-600 hover:text-gray-800"
+                    aria-label="Close Schedule Modal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
 
             <form id="scheduleForm" class="space-y-4">
                 <div>
-                    <label for="appointmentType2" class="block text-sm font-medium text-gray-700 mb-1">Appointment Type</label>
+                    <label for="appointmentType2" class="block text-sm font-medium text-gray-700 mb-1">Appointment
+                        Type</label>
                     <select id="appointmentType2" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400">
                         <option value="virtual">Virtual Check-up</option>
                         <option value="in-person">In-person Visit</option>
@@ -715,22 +746,22 @@
             const modal = document.getElementById('patientModal');
             modal.style.display = 'flex';
             modal.classList.remove('hidden');
-            
+
             // Set the patient name in the modal header
             document.getElementById('patientName').textContent = patientName;
             document.getElementById('patientInitials').textContent = patientName.charAt(0).toUpperCase();
-            
+
             // Clear previous data
             document.getElementById('currentWeek').textContent = 'Loading...';
             document.getElementById('trimester').textContent = 'Loading...';
             document.getElementById('dueDate').textContent = 'Loading...';
-            
+
             // Fetch patient details
             fetch(`/api/patient_info/${patientId}`)
                 .then(response => response.json())
                 .then(data => {
                     console.log("Patient data:", data);
-                    
+
                     // Store user ID for sending messages
                     if (data.user_id) {
                         if (!window.patientUserIdMap) {
@@ -739,17 +770,17 @@
                         window.patientUserIdMap[patientId] = data.user_id;
                         console.log(`Set user mapping: Patient ID ${patientId} -> User ID ${data.user_id}`);
                     }
-                    
+
                     // Update UI with patient data
                     document.getElementById('currentWeek').textContent = data.current_week || 'Not recorded';
                     document.getElementById('trimester').textContent = data.trimester || 'Not recorded';
                     document.getElementById('dueDate').textContent = data.due_date || 'Not set';
-                    
+
                     // Display other health metrics
                     if (data.weight) document.getElementById('weight').textContent = `${data.weight} kg`;
                     if (data.blood_pressure) document.getElementById('bp').textContent = data.blood_pressure;
                     if (data.sugar_levels) document.getElementById('sugar').textContent = data.sugar_levels;
-                    
+
                     // Load chat history
                     if (data.user_id) {
                         fetchChatHistory(data.user_id);
@@ -765,27 +796,27 @@
             modal.style.display = 'none';
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-            
+
             // Clear current patient ID
             currentPatientId = null;
         }
-        
+
         // Chat functionality
         function sendMessage() {
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value.trim();
 
             if (message === '' || !currentPatientId) return;
-            
+
             // Clear input immediately for better UX
             messageInput.value = '';
-            
+
             // Get the patient's user_id from our mapping
             const patientUserId = window.patientUserIdMap[currentPatientId] || currentPatientId;
-            
+
             // Add message to chat UI immediately
             addMessageToChat(message, 'doctor');
-            
+
             // Send to server
             fetch('/api/messages/send', {
                 method: 'POST',
@@ -798,54 +829,54 @@
                     message_type: 'doctor'
                 })
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (!data.success) {
-                    console.error("Failed to send message:", data.error);
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.success) {
+                        console.error("Failed to send message:", data.error);
+                        const chatHistory = document.getElementById('chatHistory');
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = 'text-center text-xs text-red-500 my-1';
+                        errorMsg.textContent = 'Message failed to send';
+                        chatHistory.appendChild(errorMsg);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sending message:', error);
+                    // Show error in UI
                     const chatHistory = document.getElementById('chatHistory');
                     const errorMsg = document.createElement('div');
                     errorMsg.className = 'text-center text-xs text-red-500 my-1';
                     errorMsg.textContent = 'Message failed to send';
                     chatHistory.appendChild(errorMsg);
-                }
-            })
-            .catch(error => {
-                console.error('Error sending message:', error);
-                // Show error in UI
-                const chatHistory = document.getElementById('chatHistory');
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'text-center text-xs text-red-500 my-1';
-                errorMsg.textContent = 'Message failed to send';
-                chatHistory.appendChild(errorMsg);
-            });
+                });
         }
-        
+
         function fetchChatHistory(patientId) {
             console.log("Fetching chat history for patient ID:", patientId);
-            
+
             const chatHistory = document.getElementById('chatHistory');
             const noMessages = document.getElementById('noMessages');
-            
+
             if (!chatHistory) {
                 console.error("Chat history container not found");
                 return;
             }
-            
+
             // Clear previous messages first
             chatHistory.innerHTML = '';
             if (noMessages) {
                 noMessages.style.display = 'block';
             }
-            
+
             // Get the user ID associated with this patient
             const patientUserId = window.patientUserIdMap[patientId] || patientId;
             console.log("Using user ID for chat:", patientUserId);
-            
+
             // Fetch the conversation directly with the user ID
             fetch(`/api/messages/conversation/${patientUserId}`)
                 .then(response => {
@@ -856,24 +887,24 @@
                 })
                 .then(data => {
                     console.log("Chat data received:", data);
-                    
+
                     if (!data || !data.conversation || data.conversation.length === 0) {
                         if (noMessages) {
                             noMessages.style.display = 'block';
                         }
                         return;
                     }
-                    
+
                     // If we have messages, hide the "no messages" indicator
                     if (noMessages) {
                         noMessages.style.display = 'none';
                     }
-                    
+
                     // Display messages
                     data.conversation.forEach(message => {
                         addMessageToChat(message.content, message.is_sender ? 'doctor' : 'patient', message.timestamp);
                     });
-                    
+
                     // Scroll to the bottom
                     chatHistory.scrollTop = chatHistory.scrollHeight;
                 })
@@ -882,23 +913,23 @@
                     chatHistory.innerHTML = `<div class="text-center text-red-500 my-2">Failed to load chat: ${error.message}</div>`;
                 });
         }
-        
+
         function addMessageToChat(content, sender, timestamp) {
             const chatHistory = document.getElementById('chatHistory');
             if (!chatHistory) return;
-            
+
             const messageEl = document.createElement('div');
             messageEl.className = 'mb-3';
-            
+
             // Format timestamp if provided
             let formattedTime = '';
             if (timestamp) {
                 const date = new Date(timestamp);
-                formattedTime = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             } else {
-                formattedTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                formattedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             }
-            
+
             if (sender === 'doctor') {
                 // Doctor's message (right-aligned)
                 messageEl.innerHTML = `
@@ -920,17 +951,17 @@
                     </div>
                 `;
             }
-            
+
             chatHistory.appendChild(messageEl);
             chatHistory.scrollTop = chatHistory.scrollHeight;
-            
+
             // Hide the "no messages" indicator
             const noMessages = document.getElementById('noMessages');
             if (noMessages) {
                 noMessages.style.display = 'none';
             }
         }
-        
+
         // Setup chat auto-refresh
         function setupChatRefresh() {
             // Set interval to refresh chat every 5 seconds if a patient is selected
@@ -943,11 +974,11 @@
 
         // Initialize an empty object to map patient IDs (MotherProfile.id) to user IDs (User.id)
         window.patientUserIdMap = {};
-        
+
         try {
             // Parse the patient-user mapping data from the server
             const patientUserMapData = JSON.parse('{{ patient_user_map|tojson|safe }}');
-            
+
             // Make sure we have valid patient-user mappings
             if (patientUserMapData && patientUserMapData.length > 0) {
                 // Process each mapping
@@ -1032,12 +1063,12 @@
         // Helper function to get initials from a string
         function getInitials(str) {
             if (!str) return 'AP';
-            
+
             const words = str.split(' ');
             if (words.length === 1) {
                 return str.substring(0, 2).toUpperCase();
             }
-            
+
             return words.map(word => word[0]).join('').toUpperCase();
         }
 
@@ -1049,104 +1080,104 @@
         });
 
         // Add event listener for message input Enter key
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             console.log("Doctor dashboard loaded");
-            
+
             // Handle message input Enter key press
             const messageInput = document.getElementById('messageInput');
             if (messageInput) {
-                messageInput.addEventListener('keypress', function(event) {
+                messageInput.addEventListener('keypress', function (event) {
                     if (event.key === 'Enter') {
                         event.preventDefault();
                         sendMessage();
                     }
                 });
             }
-            
+
             // Set up appointment form submission
             const appointmentForm = document.getElementById('appointmentForm');
             if (appointmentForm) {
-                appointmentForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+                appointmentForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
 
                     const patientId = currentPatientId;
                     console.log("Submitting appointment for patient ID:", patientId);
-                    
+
                     if (!patientId) {
                         alert('No patient selected.');
                         return;
                     }
-                    
+
                     const appointmentType = document.getElementById('appointmentType1').value;
                     const appointmentDate = document.getElementById('appointmentDate').value;
                     const appointmentTime = document.getElementById('appointmentTime').value;
                     const appointmentNotes = document.getElementById('appointmentNotes').value;
-                    
+
                     // Validate input
                     if (!appointmentDate) {
                         alert('Please select a date for the appointment');
                         return;
                     }
-                    
+
                     if (!appointmentTime) {
                         alert('Please select a time for the appointment');
                         return;
                     }
-                    
+
                     // Show loading state
                     const scheduleBtn = appointmentForm.querySelector('button[type="submit"]');
                     const originalText = scheduleBtn.innerHTML;
                     scheduleBtn.innerHTML = 'Scheduling...';
                     scheduleBtn.disabled = true;
-                    
+
                     // Create the appointment payload
-            const appointmentData = {
+                    const appointmentData = {
                         patientId: patientId,
                         type: appointmentType,
                         date: appointmentDate,
                         time: appointmentTime,
                         notes: appointmentNotes
                     };
-                    
+
                     console.log("Sending appointment data:", appointmentData);
-                    
+
                     // Send the appointment data to the server
-            fetch('/api/schedule_appointment', {
-                method: 'POST',
-                headers: {
+                    fetch('/api/schedule_appointment', {
+                        method: 'POST',
+                        headers: {
                             'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(appointmentData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Appointment scheduled successfully!');
-                            console.log("Appointment created with ID:", data.appointment_id);
-                            // Refresh the page to show the new appointment
-                            window.location.reload();
-                } else {
-                            alert('Error scheduling appointment: ' + (data.error || 'Unknown error'));
-                            console.error("Error scheduling appointment:", data.error);
+                        },
+                        body: JSON.stringify(appointmentData)
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Appointment scheduled successfully!');
+                                console.log("Appointment created with ID:", data.appointment_id);
+                                // Refresh the page to show the new appointment
+                                window.location.reload();
+                            } else {
+                                alert('Error scheduling appointment: ' + (data.error || 'Unknown error'));
+                                console.error("Error scheduling appointment:", data.error);
+                                // Reset button state
+                                scheduleBtn.innerHTML = originalText;
+                                scheduleBtn.disabled = false;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Error scheduling appointment: ' + error.message);
                             // Reset button state
                             scheduleBtn.innerHTML = originalText;
                             scheduleBtn.disabled = false;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Error scheduling appointment: ' + error.message);
-                        // Reset button state
-                        scheduleBtn.innerHTML = originalText;
-                        scheduleBtn.disabled = false;
-            });
-        });
+                        });
+                });
             }
-            
+
             // Close patient modal when clicking outside
             const patientModal = document.getElementById('patientModal');
             if (patientModal) {
-                patientModal.addEventListener('click', function(e) {
+                patientModal.addEventListener('click', function (e) {
                     // Only close if clicking directly on the modal background, not its children
                     if (e.target === patientModal) {
                         closePatientModal();
@@ -1158,4 +1189,5 @@
 </body>
 
 </html>
+
 </html>
