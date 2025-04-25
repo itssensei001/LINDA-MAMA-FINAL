@@ -662,13 +662,32 @@ def approve_guardian(request_id, action):
         )
         db.session.add(approval)
         guardian_request.status = 'approved'
-        flash('Guardian approved')
+        db.session.commit()
+        
+        # Determine if it's an AJAX request
+        if request.headers.get('Content-Type') == 'application/json':
+            return jsonify({"success": True, "message": "Guardian approved"})
+        else:
+            flash('Guardian approved')
+            return redirect(url_for('mother_dashboard'))
+    
     elif action == 'deny':
         guardian_request.status = 'rejected'
-        flash('Guardian request denied')
-    
         db.session.commit()
-    return redirect(url_for('mother_dashboard'))
+        
+        # Determine if it's an AJAX request
+        if request.headers.get('Content-Type') == 'application/json':
+            return jsonify({"success": True, "message": "Guardian request denied"})
+        else:
+            flash('Guardian request denied')
+            return redirect(url_for('mother_dashboard'))
+    
+    # If we get here, it's an invalid action
+    if request.headers.get('Content-Type') == 'application/json':
+        return jsonify({"success": False, "message": "Invalid action"}), 400
+    else:
+        flash('Invalid action')
+        return redirect(url_for('mother_dashboard'))
 
 @app.route('/deny_guardian/<int:request_id>', methods=['POST'])
 def deny_guardian(request_id):
