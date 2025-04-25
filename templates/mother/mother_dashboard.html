@@ -145,7 +145,7 @@
         .notification-dropdown li:hover {
             background: #f8f9fa;
         }
-
+        
         /* Style for guardian request notifications */
         .guardian-request-notification {
             background-color: #f0f9ff;
@@ -236,9 +236,8 @@
     <!-- Main Content -->
     <main class="main-content">
         <!-- Hidden div to store guardian requests data -->
-        <div id="guardian-requests-data" style="display: none;"
-            data-requests='{{ guardian_requests|tojson|safe if guardian_requests else "[]" }}'></div>
-
+        <div id="guardian-requests-data" style="display: none;" data-requests='{{ guardian_requests|tojson|safe if guardian_requests else "[]" }}'></div>
+        
         <div class="mb-8 flex justify-between items-center">
             <h1 class="text-3xl font-bold text-gray-800 gradient-text">
                 <i class="fas fa-baby mr-2"></i>
@@ -257,19 +256,34 @@
                         Hello {{ current_user.full_name }}, here's what's new with your pregnancy journey...
                     </p>
                     <div class="mt-4 flex items-center">
-                        <p class="text-lg font-medium text-blue-800 gradient-text">week {{ mother_profile.current_week
-                            }}/40</p>
+                        <p class="text-lg font-medium text-blue-800 gradient-text">week {{ mother_profile.current_week }}/40</p>
                         <span class="mx-4 text-gray-400">|</span>
                         <span class="text-lg flex items-center">
-                            Your Baby is now the size of a
+                            Your Baby is now the size of a 
                             {% if mother_profile.current_week %}
-                            {% if mother_profile.current_week <= 8 %} Grape 🍇 {% elif mother_profile.current_week <=12
-                                %} Lime 🍋 {% elif mother_profile.current_week <=16 %} Avocado 🥑 {% elif
-                                mother_profile.current_week <=20 %} Banana 🍌 {% elif mother_profile.current_week <=24
-                                %} Mango 🥭 {% elif mother_profile.current_week <=28 %} Eggplant 🍆 {% elif
-                                mother_profile.current_week <=32 %} Pineapple 🍍 {% elif mother_profile.current_week
-                                <=36 %} Honeydew 🍈 {% else %} Watermelon 🍉 {% endif %} {% else %} Unknown {% endif %}
-                                </span>
+                                {% if mother_profile.current_week <= 8 %}
+                                    Grape 🍇
+                                {% elif mother_profile.current_week <= 12 %}
+                                    Lime 🍋
+                                {% elif mother_profile.current_week <= 16 %}
+                                    Avocado 🥑
+                                {% elif mother_profile.current_week <= 20 %}
+                                    Banana 🍌
+                                {% elif mother_profile.current_week <= 24 %}
+                                    Mango 🥭
+                                {% elif mother_profile.current_week <= 28 %}
+                                    Eggplant 🍆
+                                {% elif mother_profile.current_week <= 32 %}
+                                    Pineapple 🍍
+                                {% elif mother_profile.current_week <= 36 %}
+                                    Honeydew 🍈
+                                {% else %}
+                                    Watermelon 🍉
+                                {% endif %}
+                            {% else %}
+                                Unknown
+                            {% endif %}
+                        </span>
                     </div>
                 </div>
 
@@ -332,17 +346,12 @@
 
                     <!-- Right Column -->
                     <div>
+                        <!-- Appointments -->
                         <div class="row">
                             <div class="appointments-container">
                                 <div class="floating-card p-6 bg-gray-50 shadow-md rounded-lg">
-                                    <h3 class="text-2xl font-semibold text-blue-800 mb-4">
-                                        Upcoming Appointments
-                                        {% if doctor_details %}
-                                        with Dr. {{ doctor_details.full_name }}
-                                        {% else %}
-                                        {% endif %}
-                                    </h3>
-                                    {% if appointments %}
+                                    <h3 class="text-2xl font-semibold text-blue-800 mb-4">Upcoming Appointments with Dr.
+                                        Achieng</h3>
                                     <table class="table-auto w-full text-sm text-left text-gray-600">
                                         <thead>
                                             <tr class="bg-blue-100 text-gray-800">
@@ -352,18 +361,18 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% for appointment in appointments %}
                                             <tr class="bg-white hover:bg-blue-50">
-                                                <td class="px-4 py-3">{{ appointment.date.strftime('%B %d, %Y') }}</td>
-                                                <td class="px-4 py-3">{{ appointment.time.strftime('%I:%M %p') }}</td>
-                                                <td class="px-4 py-3">{{ appointment.appointment_type | default('Check-up') }}</td>
+                                                <td class="px-4 py-3">March 10, 2025</td>
+                                                <td class="px-4 py-3">10:00 AM</td>
+                                                <td class="px-4 py-3">Check-up</td>
                                             </tr>
-                                            {% endfor %}
+                                            <tr class="bg-white hover:bg-blue-50">
+                                                <td class="px-4 py-3">March 24, 2025</td>
+                                                <td class="px-4 py-3">2:30 PM</td>
+                                                <td class="px-4 py-3">Ultrasound</td>
+                                            </tr>
                                         </tbody>
                                     </table>
-                                    {% else %}
-                                    <p class="text-gray-500 text-center py-4">No upcoming appointments scheduled.</p>
-                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -413,27 +422,27 @@
                     const notificationList = document.getElementById('notification-list');
                     const indicator = document.getElementById('notification-indicator');
                     const noNotificationsElement = document.getElementById('no-notifications');
-
+                    
                     // Clear current notifications
                     notificationList.innerHTML = '';
-
+                    
                     // Get guardian requests from the hidden div
                     const requestsDataElement = document.getElementById('guardian-requests-data');
                     let guardianRequests = [];
-
+                    
                     try {
                         guardianRequests = JSON.parse(requestsDataElement.getAttribute('data-requests'));
                     } catch (e) {
                         console.error('Error parsing guardian requests data:', e);
                     }
-
+                    
                     // Combined notification counter
                     let totalNotifications = 0;
-
+                    
                     // Add guardian requests as notifications
                     if (guardianRequests && guardianRequests.length > 0) {
                         totalNotifications += guardianRequests.length;
-
+                        
                         guardianRequests.forEach(request => {
                             const li = document.createElement('li');
                             li.className = 'guardian-request-notification';
@@ -442,40 +451,40 @@
                                     <span class="font-semibold">${request.guardian_name} wants to be your guardian</span>
                                     <span class="text-sm text-gray-600">Requested on ${request.request_date}</span>
                                     <div class="flex mt-2 space-x-2">
-                                        <a href="/approve_guardian/${request.id}/approve" 
-                                           class="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">
+                                        <button onclick="approveGuardian(${request.id}, 'approve')" 
+                                               class="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">
                                             Approve
-                                        </a>
-                                        <a href="/approve_guardian/${request.id}/deny" 
-                                           class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600">
+                                        </button>
+                                        <button onclick="approveGuardian(${request.id}, 'deny')" 
+                                               class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600">
                                             Deny
-                                        </a>
+                                        </button>
                                     </div>
                                 </div>
                             `;
                             notificationList.appendChild(li);
                         });
                     }
-
+                    
                     // Add regular notifications
                     if (data.notifications && data.notifications.length > 0) {
                         totalNotifications += data.notifications.length;
-
+                        
                         data.notifications.forEach(notification => {
                             const li = document.createElement('li');
                             li.textContent = notification.content;
-
+                            
                             // If it's a guardian request notification, add an action link
                             if (notification.type === 'guardian_request') {
                                 li.innerHTML += `<br><a href="#" 
                                                  onclick="markNotificationRead(${notification.id})" 
                                                  class="text-blue-500 hover:underline">View</a>`;
                             }
-
+                            
                             notificationList.appendChild(li);
                         });
                     }
-
+                    
                     // Show/hide notification indicator
                     if (totalNotifications > 0) {
                         indicator.style.display = 'block';
@@ -495,14 +504,52 @@
             fetch(`/api/notifications/read/${notificationId}`, {
                 method: 'POST',
             })
-                .then(response => response.json())
-                .then(data => {
-                    // Refresh notifications
-                    fetchNotifications();
-                })
-                .catch(error => {
-                    console.error('Error marking notification as read:', error);
-                });
+            .then(response => response.json())
+            .then(data => {
+                // Refresh notifications
+                fetchNotifications();
+            })
+            .catch(error => {
+                console.error('Error marking notification as read:', error);
+            });
+        }
+
+        // Approve or deny guardian request
+        function approveGuardian(requestId, action) {
+            fetch(`/approve_guardian/${requestId}/${action}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                // Remove the request from the display
+                const requestsDataElement = document.getElementById('guardian-requests-data');
+                let guardianRequests = [];
+                
+                try {
+                    guardianRequests = JSON.parse(requestsDataElement.getAttribute('data-requests'));
+                    // Filter out the approved/denied request
+                    guardianRequests = guardianRequests.filter(req => req.id !== requestId);
+                    requestsDataElement.setAttribute('data-requests', JSON.stringify(guardianRequests));
+                } catch (e) {
+                    console.error('Error updating guardian requests data:', e);
+                }
+                
+                // Refresh notifications
+                fetchNotifications();
+                
+                // Show success message
+                const message = action === 'approve' ? 'Guardian approved successfully!' : 'Guardian request denied.';
+                alert(message);
+            })
+            .catch(error => {
+                console.error('Error processing guardian request:', error);
+                alert('Error processing request. Please try again.');
+            });
         }
 
         // Load guardian requests
@@ -512,10 +559,10 @@
         }
 
         // Initialize when the document is loaded
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             // Load notifications (which now includes guardian requests)
             fetchNotifications();
-
+            
             // Set up refresh intervals
             setInterval(fetchNotifications, 30000); // Refresh notifications every 30 seconds
         });
