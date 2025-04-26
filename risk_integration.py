@@ -1,97 +1,172 @@
 """
-Risk Prediction Integration Module
+Risk Integration Module
 
-This module integrates the risk prediction model from LindaMamaMLmodel
-with the main Linda Mama Flask application.
+This module serves as a bridge between the main Flask application (app.py)
+and the ML risk prediction model (risk_predictor.py).
+
+It handles validation, error handling, and formatting of predictions.
 """
 
 import os
 import sys
-import logging
+import json
+import traceback
+from typing import Tuple, Dict, Any, Union
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Dynamically determine model directory path - check multiple possible locations
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PARENT_DIR = os.path.dirname(CURRENT_DIR)
+POSSIBLE_MODEL_DIRS = [
+    os.path.join(CURRENT_DIR, 'LindaMamaMLmodel'),  # If model is in app dir
+    os.path.join(PARENT_DIR, 'LindaMamaMLmodel'),   # If model is in parent dir
+    'LindaMamaMLmodel',                            # Relative to current dir
+    'D:/Projectwork/LINDA-MAMA-FINAL/LindaMamaMLmodel'  # Explicit path to the model directory
+]
 
-# Configure paths
-# Adjust this path to point to your LindaMamaMLmodel directory
-ML_MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'LindaMamaMLmodel')
+# Try to find the model directory
+MODEL_DIR = None
+for dir_path in POSSIBLE_MODEL_DIRS:
+    if os.path.exists(dir_path) and os.path.isdir(dir_path):
+        MODEL_DIR = dir_path
+        print(f"✅ Found ML model directory at: {MODEL_DIR}")
+        if MODEL_DIR not in sys.path:
+            sys.path.insert(0, MODEL_DIR)
+        break
+else:
+    print("❌ Could not find ML model directory. Checked paths:")
+    for path in POSSIBLE_MODEL_DIRS:
+        print(f"  - {path}")
 
-# Add ML model directory to path so we can import from it
-if ML_MODEL_DIR not in sys.path:
-    sys.path.insert(0, ML_MODEL_DIR)
-
-# Try to import the predict_risk function
+# Import predict_risk function
+predict_risk = None
 try:
     from risk_predictor import predict_risk
-    logger.info("✅ Risk predictor function loaded successfully.")
-    PREDICTOR_AVAILABLE = True
+    print("✅ Risk predictor loaded successfully in integration module.")
 except ImportError as e:
-    logger.error(f"❌ Error importing risk_predictor: {e}")
-    logger.error("Ensure risk_predictor.py is available in the LindaMamaMLmodel directory.")
-    PREDICTOR_AVAILABLE = False
+    print(f"❌ Error importing risk_predictor in integration module: {e}")
+    print(f"Looking in: {MODEL_DIR}")
 except Exception as e:
-    logger.error(f"❌ An unexpected error during import: {e}")
-    PREDICTOR_AVAILABLE = False
+    print(f"❌ Unexpected error loading risk_predictor: {e}")
+    traceback.print_exc()
 
-def process_risk_prediction(input_data):
+# Create a mock prediction function to use if the real one isn't available
+def mock_predict_risk(input_data):
+    """Mock version of predict_risk that returns fake data when the real model isn't available"""
+    print("⚠️ Using mock prediction function - real model not available")
+    # Calculate a simple risk level based on age and blood pressure
+    age = float(input_data.get('Age', 30))
+    bp = float(input_data.get('Blood_Pressure', 120))
+    
+    # Simple rule-based risk assessment
+    if age > 35 and bp > 140:
+        risk_level = "High"
+    elif age > 30 or bp > 130:
+        risk_level = "Medium"
+    else:
+        risk_level = "Low"
+    
+    # Generate mock top factors
+    top_factors = [
+        {"feature": "Age", "contribution": 0.4 if age > 30 else 0.2},
+        {"feature": "Blood_Pressure", "contribution": 0.5 if bp > 130 else 0.3},
+        {"feature": "Blood_Sugar", "contribution": 0.3}
+    ]
+    
+    # Recommendation based on risk level
+    if risk_level == "High":
+        recommendation = "Please contact your nearest doctor immediately."
+    elif risk_level == "Medium":
+        recommendation = "Consider increasing check-ups, follow tailored nutrition, and monitor vitals closely."
+    else:
+        recommendation = "Maintain your current routine: balanced diet, regular exercise, and attend scheduled visits."
+    
+    return {
+        "risk_level": risk_level,
+        "top_factors": top_factors,
+        "recommendation": recommendation
+    }
+
+def process_risk_prediction(input_data: Dict[str, Any]) -> Tuple[Dict[str, Any], int]:
     """
-    Process risk prediction request using the loaded ML model.
+    Process risk prediction request, handle validation and errors
     
     Args:
-        input_data (dict): Input data from the user's form
+        input_data: The input data from the request
         
     Returns:
-        dict: Prediction result or error message
+        Tuple of (result dict, HTTP status code)
     """
-    if not PREDICTOR_AVAILABLE:
-        return {"error": "Risk prediction service is currently unavailable"}, 503
+    # Check if predictor is available
+    if not predict_risk:
+        error_msg = "ML model not loaded. Please ensure risk_model.pkl exists in LindaMamaMLmodel directory."
+        print(f"Error: {error_msg}")
+        return {"error": error_msg}, 503
     
-    # Required input fields for the model
-    required_keys = [
+    # Validate required fields
+    required_fields = [
         'Age', 'Current_Week', 'Height', 'Weight', 'Blood_Pressure',
         'Heart_Rate', 'Blood_Sugar', 'Haemoglobin', 'Prenatal_Visits',
         'Miscarriage_History', 'Smoking_Or_Alcohol'
     ]
     
-    # Check for missing required fields
-    missing_keys = [key for key in required_keys if key not in input_data or input_data[key] is None]
-    if missing_keys:
-        return {"error": f"Missing required input fields: {', '.join(missing_keys)}"}, 400
+    missing_fields = [field for field in required_fields if field not in input_data]
+    if missing_fields:
+        error_msg = f"Missing required fields: {', '.join(missing_fields)}"
+        print(f"Validation error: {error_msg}")
+        return {"error": error_msg}, 400
     
+    # Validate data types
     try:
-        # Process and convert data types
-        numeric_keys = ['Age', 'Height', 'Weight', 'Blood_Pressure', 'Heart_Rate', 'Blood_Sugar', 'Haemoglobin']
-        integer_keys = ['Current_Week', 'Prenatal_Visits']
-        
-        processed_data = {}
-        for key in required_keys:
-            value = input_data[key]
-            if key in numeric_keys:
-                if value is None or value == '': 
-                    raise ValueError(f"Missing value for numeric field: {key}")
-                processed_data[key] = float(value)
-            elif key in integer_keys:
-                if value is None or value == '': 
-                    raise ValueError(f"Missing value for integer field: {key}")
-                processed_data[key] = int(value)
-            else:  # Categorical fields
-                if value is None or value == '':
-                    raise ValueError(f"Missing value for categorical field: {key}")
-                processed_data[key] = value
-        
-        # Call the prediction function
-        logger.info(f"Making prediction with data: {processed_data}")
-        result = predict_risk(processed_data)
-        logger.info(f"Prediction result: {result}")
-        
+        # Convert numeric values
+        validated_data = {
+            'Age': float(input_data['Age']),
+            'Current_Week': int(input_data['Current_Week']),
+            'Height': float(input_data['Height']),
+            'Weight': float(input_data['Weight']),
+            'Blood_Pressure': float(input_data['Blood_Pressure']),
+            'Heart_Rate': float(input_data['Heart_Rate']),
+            'Blood_Sugar': float(input_data['Blood_Sugar']),
+            'Haemoglobin': float(input_data['Haemoglobin']),
+            'Prenatal_Visits': int(input_data['Prenatal_Visits']),
+            'Miscarriage_History': input_data['Miscarriage_History'],
+            'Smoking_Or_Alcohol': input_data['Smoking_Or_Alcohol']
+        }
+    except (ValueError, TypeError) as e:
+        error_msg = f"Invalid data format: {str(e)}"
+        print(f"Validation error: {error_msg}")
+        return {"error": error_msg}, 400
+    
+    # Call the prediction function
+    try:
+        result = predict_risk(validated_data)
         return result, 200
-        
     except ValueError as e:
-        logger.error(f"ValueError during prediction: {e}")
-        return {"error": f"Prediction error: {str(e)}"}, 400
+        error_msg = f"Prediction error: {str(e)}"
+        print(f"ValueError in prediction: {error_msg}")
+        return {"error": error_msg}, 400
     except Exception as e:
-        logger.error(f"Unexpected error during prediction: {e}")
-        import traceback
+        error_msg = f"Unexpected error during prediction: {str(e)}"
+        print(f"Exception in prediction: {error_msg}")
         traceback.print_exc()
-        return {"error": "An unexpected error occurred during analysis."}, 500 
+        return {"error": error_msg}, 500
+
+# For testing only
+if __name__ == "__main__":
+    # Test the integration
+    test_data = {
+        'Age': 30,
+        'Current_Week': 20,
+        'Height': 1.65,
+        'Weight': 68,
+        'Blood_Pressure': 120,
+        'Heart_Rate': 80,
+        'Blood_Sugar': 95,
+        'Haemoglobin': 12.5,
+        'Prenatal_Visits': 5,
+        'Miscarriage_History': 'No',
+        'Smoking_Or_Alcohol': 'No'
+    }
+    
+    result, status_code = process_risk_prediction(test_data)
+    print(f"Status: {status_code}")
+    print(json.dumps(result, indent=2)) 

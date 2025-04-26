@@ -14,7 +14,40 @@ from flask_socketio import SocketIO
 from flask_mail import Mail, Message
 import re
 import logging
-from risk_integration import process_risk_prediction
+import sys
+import requests
+import json
+import traceback
+
+# Set up logging
+logging.basicConfig(level=logging.INFO, 
+                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Add the parent directory to the path so we can import the ML model
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PARENT_DIR = os.path.dirname(CURRENT_DIR)
+POSSIBLE_MODEL_DIRS = [
+    os.path.join(CURRENT_DIR, 'LindaMamaMLmodel'),  # If model is in app dir
+    os.path.join(PARENT_DIR, 'LindaMamaMLmodel'),   # If model is in parent dir
+    'LindaMamaMLmodel'                             # Relative to current dir
+]
+
+# Try to find the model directory
+MODEL_DIR = None
+for dir_path in POSSIBLE_MODEL_DIRS:
+    if os.path.exists(dir_path) and os.path.isdir(dir_path):
+        MODEL_DIR = dir_path
+        break
+
+if MODEL_DIR:
+    logger.info(f"✅ Found ML model directory at: {MODEL_DIR}")
+    if MODEL_DIR not in sys.path:
+        sys.path.insert(0, MODEL_DIR)
+else:
+    logger.error("❌ Could not find ML model directory. Checked paths:")
+    for path in POSSIBLE_MODEL_DIRS:
+        logger.error(f"  - {path}")
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
@@ -238,31 +271,26 @@ def signup():
         password = request.form.get('password')
         full_name = request.form.get('full_name')
         role = request.form.get('role')
-        
-        # Use email as username
-        username = email
-        
-        # Check if user already exists - FIRST CHECK
+
+        # --- Existing checks (email exists, domain, password complexity) ---
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             flash('Account already exists. Please login instead.')
             return redirect(url_for('login'))
-        
-        # Check email domain - SECOND CHECK
+
         if not (email.endswith('@gmail.com') or email.endswith('@yahoo.com')):
-            flash('Email must be a Gmail or Yahoo address.')
-            return redirect(url_for('signup'))
-        
-        # Validate password - THIRD CHECK
+             flash('Email must be a Gmail or Yahoo address.')
+             return redirect(url_for('signup'))
+
         password_regex = re.compile(r'^(?=.*\d)(?=.*[!@#$%^&*\.])[a-zA-Z0-9!@#$%^&*\.]{6,}$')
         if not password_regex.match(password):
             flash('Password must be at least 6 characters long and include at least 1 number and 1 symbol.')
             return redirect(url_for('signup'))
-        
-        # Create verification token
+        # --- End of existing checks ---
+
         verification_token = secrets.token_urlsafe(32)
-        
-        # Create new user with username field set
+        username = email # Use email as username
+
         new_user = User(
             username=username,
             email=email,
@@ -271,26 +299,79 @@ def signup():
             verification_token=verification_token
         )
         new_user.set_password(password)
-        
-        db.session.add(new_user)
-        db.session.commit()
-        
-        # Try to send email, but also provide direct verification link
-        verification_url = url_for('verify_email', token=verification_token, _external=True)
+
         try:
-            email_sent = send_verification_email(new_user)
-            if email_sent:
-                flash(f'Account created! Please check your email to verify your account. You must verify your email before logging in.')
-            else:
-                # Email sending failed, provide direct verification link
-                flash(f'Email could not be sent. Please click this link to verify your account: <a href="{verification_url}" class="verification-link">Verify Account</a>', 'verification')
+            db.session.add(new_user)
+            db.session.flush() # Flush to get the new_user.id
+
+            assigned_doctor_profile_id = None # Keep track of assigned doctor
+
+            # --- Doctor Assignment Logic (if role is 'mother') ---
+            if role == 'mother':
+                # Find available doctors
+                # Consider adding more sophisticated logic here (e.g., load balancing)
+                available_doctors = DoctorProfile.query.all()
+
+                if available_doctors:
+                    # Simple random assignment for now
+                    chosen_doctor_profile = random.choice(available_doctors)
+                    assigned_doctor_profile_id = chosen_doctor_profile.id # Store the DoctorProfile ID
+                    print(f"Assigning mother {new_user.email} to doctor profile ID {assigned_doctor_profile_id}") # Debug print
+
+                    # Create the MotherProfile and link the doctor
+                    mother_profile = MotherProfile(
+                        user_id=new_user.id,
+                        doctor_id=assigned_doctor_profile_id # Assign the DoctorProfile ID here
+                        # Initialize other fields as needed, e.g., weight=0, etc.
+                    )
+                    db.session.add(mother_profile)
+                else:
+                    # Handle case where no doctors are available
+                    print(f"No doctors available to assign to mother {new_user.email}")
+                    # Create profile without a doctor for now
+                    mother_profile = MotherProfile(user_id=new_user.id)
+                    db.session.add(mother_profile)
+
+            # --- Handle Doctor Profile Creation (if role is 'doctor') ---
+            elif role == 'doctor':
+                 # Ensure a DoctorProfile is created for the new doctor user
+                 # You might want to collect specialty/hospital info during signup
+                 # or have a separate profile completion step.
+                 doctor_profile = DoctorProfile(
+                     user_id=new_user.id,
+                     specialty="General Practice", # Example default
+                     hospital="Community Hospital" # Example default
+                 )
+                 db.session.add(doctor_profile)
+
+            # --- Handle Guardian Request (if role is 'guardian') ---
+            # (Keep your existing guardian logic here if needed)
+            # elif role == 'guardian': ...
+
+            # Commit all changes (user, profile, assignment)
+            db.session.commit()
+
+            # --- Email Verification Logic ---
+            verification_url = url_for('verify_email', token=verification_token, _external=True)
+            try:
+                email_sent = send_verification_email(new_user)
+                if email_sent:
+                    flash(f'Account created! Please check your email to verify your account. You must verify your email before logging in.')
+                else:
+                    flash(f'Email could not be sent. Please click this link to verify your account: <a href="{verification_url}" class="verification-link">Verify Account</a>', 'verification')
+            except Exception as e:
+                print(f"Error in signup sending email: {str(e)}")
+                flash(f'Account created! Click this link to verify your account: <a href="{verification_url}" class="verification-link">Verify Account</a>', 'verification')
+            # --- End Email Verification ---
+
+            return redirect(url_for('login'))
+
         except Exception as e:
-            print(f"Error in signup: {str(e)}")
-            # Provide direct verification link on error
-            flash(f'Account created! Click this link to verify your account: <a href="{verification_url}" class="verification-link">Verify Account</a>', 'verification')
-        
-        return redirect(url_for('login'))
-    
+            db.session.rollback() # Rollback in case of error during assignment or profile creation
+            print(f"Error during signup or assignment: {str(e)}")
+            flash('An error occurred during signup. Please try again.')
+            return redirect(url_for('signup'))
+
     return render_template('signup.html')
 
 def send_verification_email(user):
@@ -392,32 +473,49 @@ def mother_dashboard():
     if current_user.role != 'mother':
         return redirect(url_for('login'))
 
-    # Fetch the mother's profile
     mother_profile = MotherProfile.query.filter_by(user_id=current_user.id).first()
 
     if not mother_profile:
-        # Create a new mother profile instead of redirecting
         mother_profile = MotherProfile(user_id=current_user.id)
         db.session.add(mother_profile)
         db.session.commit()
         flash("Welcome! Your profile has been created.")
 
-    # Fetch latest health metrics
+    # --- Fetch Assigned Doctor Details ---
+    doctor_details = None
+    if mother_profile.doctor_id:
+        # Join DoctorProfile with User table to get the doctor's name
+        doctor_info = db.session.query(DoctorProfile, User)\
+            .join(User, User.id == DoctorProfile.user_id)\
+            .filter(DoctorProfile.id == mother_profile.doctor_id)\
+            .first()
+        if doctor_info:
+            doctor_profile, doctor_user = doctor_info
+            doctor_details = {
+                'full_name': doctor_user.full_name,
+                'specialty': doctor_profile.specialty,
+                 'hospital': doctor_profile.hospital
+                # Add other details if needed
+            }
+    # --- End Fetch Doctor Details ---
+
     latest_metrics = HealthMetric.query.filter_by(mother_id=current_user.id).order_by(HealthMetric.date_recorded.desc()).first()
-    
-    # Get upcoming appointments
-    appointments = Appointment.query.filter_by(
-        mother_id=current_user.id, 
-        status='scheduled'
-    ).order_by(Appointment.date).limit(3).all()
-    
-    # Get pending guardian requests
+
+    # --- Fetch Actual Upcoming Appointments ---
+    # Query appointments specifically for this mother
+    upcoming_appointments = Appointment.query.filter(
+        Appointment.mother_id == current_user.id, # Filter by mother's user_id
+        Appointment.status == 'scheduled',
+        Appointment.date >= datetime.utcnow().date() # Show only today or future appointments
+    ).order_by(Appointment.date, Appointment.time).limit(5).all() # Limit to 5 for the dashboard
+    # --- End Fetch Appointments ---
+
+
     guardian_requests_query = GuardianRequest.query.filter_by(
         mother_email=current_user.email,
         status='pending'
     ).all()
-    
-    # Convert guardian requests to serializable dictionaries
+
     guardian_requests = []
     for request in guardian_requests_query:
         guardian = User.query.get(request.guardian_id)
@@ -427,12 +525,13 @@ def mother_dashboard():
             'guardian_name': guardian.full_name if guardian else 'Unknown',
             'request_date': request.request_date.strftime('%Y-%m-%d')
         })
-    
+
     return render_template(
-        'mother/mother_dashboard.html',
+        'mother/mother_dashboard.html', # Ensure this path is correct
         mother_profile=mother_profile,
         metrics=latest_metrics,
-        appointments=appointments,
+        appointments=upcoming_appointments, # Pass the actual appointments
+        doctor_details=doctor_details, # Pass the doctor details
         guardian_requests=guardian_requests
     )
 
@@ -1015,10 +1114,10 @@ def assign_patients_to_doctors():
     # Commit changes to the database
     db.session.commit()
 
-@app.before_request
-def setup():
+# @app.before_request
+# def setup():
     # Call the assignment function
-    assign_patients_to_doctors()
+    # assign_patients_to_doctors()
 
 @app.route('/api/patient_info/<int:patient_id>')
 @login_required
@@ -1313,30 +1412,55 @@ def get_mother_doctor_info():
 
 # --- Risk Prediction Routes ---
 
+# Import the risk prediction integration module
+try:
+    from risk_integration import process_risk_prediction
+    logger.info("✅ Risk integration module loaded successfully.")
+except ImportError as e:
+    logger.error(f"❌ Error importing risk_integration module: {e}")
+    # Create a fallback function that returns an error
+    def process_risk_prediction(input_data):
+        error_msg = "Risk prediction service not available - integration module could not be loaded."
+        logger.error(error_msg)
+        return {"error": error_msg}, 503
+
+# Direct import attempt for debugging
+try:
+    from risk_predictor import predict_risk
+    logger.info("✅ Direct import of risk_predictor successful!")
+except Exception as e:
+    logger.error(f"❌ Could not directly import risk_predictor: {e}")
+    predict_risk = None
+
 @app.route('/predict_risk', methods=['POST'])
 @login_required
-def predict_risk():
+def predict_risk_route():
     """Handle risk prediction requests from the health monitoring page"""
+    logger.info("Processing risk prediction request")
+    
     if not request.is_json:
+        logger.error("Request is not JSON")
         return jsonify({"error": "Request must be JSON"}), 400
         
-    input_data = request.get_json()
-    
-    # Log the request for debugging
-    app.logger.info(f"Risk prediction request from user {current_user.id}: {input_data}")
-    
-    # Process the prediction using our integration module
-    result, status_code = process_risk_prediction(input_data)
-    
-    # If there was an error, log it
-    if status_code != 200:
-        app.logger.error(f"Risk prediction error: {result.get('error', 'Unknown error')}")
-    else:
-        app.logger.info(f"Risk prediction successful: {result.get('risk_level')}")
+    try:
+        input_data = request.get_json()
+        
+        # Log the request for debugging
+        logger.info(f"Risk prediction request from user {current_user.id}")
+        logger.debug(f"Risk prediction input data: {input_data}")
+        
+        # Process the prediction using our integration module
+        result, status_code = process_risk_prediction(input_data)
+        
+        # If there was an error, log it
+        if status_code != 200:
+            logger.error(f"Risk prediction error: {result.get('error', 'Unknown error')}")
+            return jsonify(result), status_code
+        
+        logger.info(f"Risk prediction successful: {result.get('risk_level')}")
         
         # Save the prediction result to the database for history tracking
         try:
-            import json
             prediction = RiskPrediction(
                 mother_id=current_user.id,
                 risk_level=result.get('risk_level'),
@@ -1346,12 +1470,79 @@ def predict_risk():
             )
             db.session.add(prediction)
             db.session.commit()
+            logger.info(f"Saved prediction result to database with ID: {prediction.id}")
         except Exception as e:
-            app.logger.error(f"Error saving prediction to database: {str(e)}")
+            logger.error(f"Error saving prediction to database: {str(e)}")
             db.session.rollback()
             # Continue without failing the request
         
-    return jsonify(result), status_code
+        return jsonify(result), status_code
+        
+    except Exception as e:
+        logger.error(f"Unexpected error in predict_risk route: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+def setup_doctor_mother_relationship():
+    """
+    Function to create a doctor and assign to the mother profile.
+    For development/testing purposes only.
+    """
+    # Check if a doctor already exists
+    doctor = User.query.filter_by(role='doctor').first()
+    
+    if not doctor:
+        # Create doctor user
+        doctor = User(
+            username='dr.achieng@example.com',
+            email='dr.achieng@example.com',
+            full_name='Dr. James Achieng',
+            role='doctor'
+        )
+        doctor.set_password('password')
+        db.session.add(doctor)
+        db.session.flush()  # To get the doctor.id
+        
+        # Create doctor profile
+        doctor_profile = DoctorProfile(
+            user_id=doctor.id,
+            specialty='Obstetrics & Gynecology',
+            hospital='Nairobi General Hospital'
+        )
+        db.session.add(doctor_profile)
+        db.session.commit()
+    else:
+        # Check if doctor profile exists
+        doctor_profile = DoctorProfile.query.filter_by(user_id=doctor.id).first()
+        if not doctor_profile:
+            doctor_profile = DoctorProfile(
+                user_id=doctor.id,
+                specialty='Obstetrics & Gynecology',
+                hospital='Nairobi General Hospital'
+            )
+            db.session.add(doctor_profile)
+            db.session.commit()
+    
+    # Get all mother profiles without doctor
+    mother_profiles = MotherProfile.query.filter(MotherProfile.doctor_id.is_(None)).all()
+    
+    for mother_profile in mother_profiles:
+        # Randomly choose a doctor for each mother
+        if doctor_profile:
+            random_doctor = random.choice(DoctorProfile.query.all())
+            mother_profile.doctor_id = random_doctor.id
+    
+    db.session.commit()
+    print(f"Doctor {doctor.full_name} (ID: {doctor.id}) with profile ID {doctor_profile.id} assigned to mothers")
+    return doctor_profile.id
+
+# For development purposes - initialize at startup
+# Uncomment this if you want to automatically setup the relationship when the app starts
+@app.route('/setup_doctor')
+def init_app_data():
+    """Development endpoint to set up doctor and mother relationship"""
+    doctor_profile_id = setup_doctor_mother_relationship()
+    return f"Doctor setup complete. Doctor profile ID: {doctor_profile_id}"
 
 if __name__ == "__main__":
     with app.app_context():
